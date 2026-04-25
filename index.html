@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Cellar — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --amber:#C8873A;--amber-deep:#8B5A1A;--amber-light:#F5D9A8;
+  --copper:#B5622A;--copper-light:#D4884A;
+  --cream:#F9F2E4;--text-light:#9B7850;
+  --border:rgba(139,90,26,0.22);--border-strong:rgba(139,90,26,0.45);
+  --bg:#16100A;--surface:#1E1409;--surface2:#271A0E;--card:#211508;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--cream);font-family:'Crimson Pro',Georgia,serif;font-size:16px;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9999;}
+.hero{text-align:center;padding:64px 24px 48px;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 0%,rgba(139,90,26,0.12) 0%,transparent 70%);pointer-events:none;}
+.hero-orn{font-size:11px;letter-spacing:7px;color:var(--amber);text-transform:uppercase;margin-bottom:14px;font-weight:300;opacity:0.8;}
+.hero h1{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--cream);line-height:1.05;margin-bottom:10px;letter-spacing:-1px;}
+.hero h1 em{color:var(--amber);font-style:italic;}
+.hero-tagline{font-size:16px;color:var(--text-light);font-style:italic;font-weight:300;letter-spacing:0.5px;max-width:420px;margin:0 auto 24px;}
+.hero-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto;}
+.nav{position:sticky;top:0;z-index:100;background:rgba(22,16,10,0.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.nav-inner{max-width:1100px;margin:0 auto;padding:0 24px;display:flex;align-items:center;}
+.nav-logo{font-family:'Playfair Display',serif;font-size:16px;color:var(--amber);font-style:italic;padding:14px 0;margin-right:auto;}
+.nav-tab{padding:14px 20px;cursor:pointer;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text-light);background:none;border:none;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;letter-spacing:0.5px;}
+.nav-tab:hover{color:var(--amber-light);}
+.nav-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.wrap{max-width:1100px;margin:0 auto;padding:40px 24px 80px;}
+.section{display:none;} .section.active{display:block;}
+.loading{text-align:center;padding:80px 20px;color:var(--text-light);}
+.loading-icon{font-size:36px;margin-bottom:16px;animation:spin 2s linear infinite;display:inline-block;}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.loading p{font-size:15px;font-style:italic;}
+.search-bar{display:flex;gap:10px;margin-bottom:32px;flex-wrap:wrap;}
+.search-input{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 18px;color:var(--cream);font-family:'Crimson Pro',serif;font-size:15px;outline:none;transition:border-color 0.2s;}
+.search-input:focus{border-color:var(--amber);}
+.search-input::placeholder{color:var(--text-light);}
+.filter-select{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--cream);font-family:'Crimson Pro',serif;font-size:14px;outline:none;transition:border-color 0.2s;}
+.filter-select:focus{border-color:var(--amber);}
+.filter-select option{background:var(--surface2);}
+.sec-hd{margin-bottom:28px;}
+.sec-hd-label{font-size:10px;letter-spacing:5px;text-transform:uppercase;color:var(--amber);margin-bottom:8px;font-weight:300;}
+.sec-hd-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--cream);}
+.sec-hd-title em{color:var(--amber);font-style:italic;}
+.sec-hd-line{width:40px;height:1px;background:var(--amber);margin-top:10px;opacity:0.5;}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color 0.25s,transform 0.2s;cursor:pointer;}
+.card:hover{border-color:var(--border-strong);transform:translateY(-3px);}
+.card-thumb{width:100%;height:180px;overflow:hidden;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:52px;color:rgba(200,135,58,0.2);position:relative;}
+.card-thumb img{width:100%;height:100%;object-fit:cover;}
+.card-thumb-ov{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(22,16,10,0.5) 100%);}
+.card-body{padding:16px 18px;}
+.card-cat{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);font-weight:600;margin-bottom:6px;}
+.card-name{font-family:'Playfair Display',serif;font-size:19px;font-weight:700;color:var(--cream);line-height:1.2;margin-bottom:5px;}
+.card-meta{font-size:13px;color:var(--text-light);margin-bottom:8px;line-height:1.5;}
+.stars{display:flex;gap:2px;}
+.star{font-size:13px;color:var(--amber);}
+.star.e{color:rgba(200,135,58,0.2);}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:10px;}
+.tag{font-size:10px;letter-spacing:1px;text-transform:uppercase;background:rgba(200,135,58,0.1);color:var(--amber);padding:2px 9px;border-radius:20px;border:1px solid rgba(200,135,58,0.22);}
+.card-foot{padding:10px 18px 14px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid rgba(139,90,26,0.1);margin-top:10px;}
+.card-price{font-family:'Playfair Display',serif;font-size:16px;color:var(--amber);}
+.card-note{font-size:13px;color:rgba(249,242,228,0.55);line-height:1.6;font-style:italic;margin-top:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(8,4,1,0.9);z-index:200;align-items:flex-start;justify-content:center;padding:20px 16px;overflow-y:auto;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;width:100%;max-width:600px;overflow:hidden;position:relative;}
+.modal-img{width:100%;max-height:460px;object-fit:contain;background:var(--surface2);}
+.modal-img-ph{width:100%;height:100px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:60px;color:rgba(200,135,58,0.18);}
+.modal-body{padding:28px 28px 32px;}
+.modal-close{position:absolute;top:14px;right:14px;background:rgba(22,16,10,0.7);border:1px solid var(--border);color:var(--cream);cursor:pointer;font-size:18px;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;z-index:10;}
+.modal-close:hover{background:rgba(200,135,58,0.2);}
+.modal-region{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--amber);margin-bottom:6px;font-weight:300;}
+.modal-name{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--cream);line-height:1.1;margin-bottom:4px;}
+.modal-dist{font-size:14px;color:var(--text-light);margin-bottom:14px;}
+.modal-meta-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;}
+.meta-cell{background:var(--surface2);border-radius:8px;padding:10px 13px;}
+.meta-lbl{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-light);margin-bottom:3px;}
+.meta-val{font-size:14px;color:var(--cream);font-weight:600;}
+.modal-note{background:var(--surface2);border-radius:8px;padding:15px;font-style:italic;font-size:15px;line-height:1.75;color:rgba(249,242,228,0.78);border-left:3px solid var(--amber);margin-top:14px;}
+.pairing-box{background:rgba(200,135,58,0.08);border:1px solid rgba(200,135,58,0.22);border-radius:8px;padding:12px 14px;font-size:14px;color:var(--amber);margin-top:12px;line-height:1.5;}
+.result-count{font-size:13px;color:var(--text-light);margin-bottom:18px;font-style:italic;}
+.st-in{background:rgba(42,180,90,0.15);color:#5dc87a;border:1px solid rgba(42,180,90,0.25);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;}
+.st-out{background:rgba(224,80,80,0.15);color:#e07070;border:1px solid rgba(224,80,80,0.25);font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;}
+.empty{text-align:center;padding:60px 20px;color:var(--text-light);}
+.empty-icon{font-size:48px;margin-bottom:14px;color:rgba(200,135,58,0.15);}
+.empty p{font-size:15px;font-style:italic;}
+@media(max-width:640px){.hero h1{font-size:36px;}.modal-meta-grid{grid-template-columns:1fr;}.grid{grid-template-columns:1fr;}}
+</style>
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDY4MCA2ODAiIHJvbGU9ImltZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGRlZnM+CiAgPGNsaXBQYXRoIGlkPSJyb3VuZGVkIj4KICAgIDxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIHJ4PSIxMzAiLz4KICA8L2NsaXBQYXRoPgo8L2RlZnM+CjxnIGNsaXAtcGF0aD0idXJsKCNyb3VuZGVkKSI+CiAgPHJlY3QgeD0iNDAiIHk9IjQwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzFBMEYwNiIvPgogIDxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiMyMTE0MDgiLz4KICA8ZWxsaXBzZSBjeD0iMzQwIiBjeT0iMjAwIiByeD0iMjIwIiByeT0iMTYwIiBmaWxsPSIjOEI1QTFBIiBvcGFjaXR5PSIwLjE4Ii8+CiAgPGVsbGlwc2UgY3g9IjM0MCIgY3k9IjUwMCIgcng9IjI2MCIgcnk9IjEyMCIgZmlsbD0iIzNEMUYwNiIgb3BhY2l0eT0iMC42Ii8+CiAgPGxpbmUgeDE9IjE0MCIgeTE9IjEzMCIgeDI9IjU0MCIgeTI9IjEzMCIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuNCIvPgogIDxsaW5lIHgxPSIxNzAiIHkxPSIxNDIiIHgyPSI1MTAiIHkyPSIxNDIiIHN0cm9rZT0iI0M4ODczQSIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuMiIvPgogIDxwYXRoIGQ9Ik0gMjQwIDIzMCBMIDIyMCA1MDAgTCA0NjAgNTAwIEwgNDQwIDIzMCBaIiBmaWxsPSIjQzg4NzNBIiBvcGFjaXR5PSIwLjEyIi8+CiAgPHBhdGggZD0iTSAyNDAgMjMwIEwgMjIwIDUwMCBMIDQ2MCA1MDAgTCA0NDAgMjMwIFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0M4ODczQSIgc3Ryb2tlLXdpZHRoPSIzIiBvcGFjaXR5PSIwLjkiLz4KICA8cGF0aCBkPSJNIDIyNiA0MjAgTCAyMjIgNTAwIEwgNDU4IDUwMCBMIDQ1NCA0MjAgWiIgZmlsbD0iI0M4ODczQSIgb3BhY2l0eT0iMC41NSIvPgogIDxwYXRoIGQ9Ik0gMjI2IDQyMCBMIDQ1NCA0MjAiIHN0cm9rZT0iI0U4QTA1MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNyIvPgogIDxlbGxpcHNlIGN4PSIyOTAiIGN5PSI0NjAiIHJ4PSIyOCIgcnk9IjEwIiBmaWxsPSIjRjVEOUE4IiBvcGFjaXR5PSIwLjE1IiB0cmFuc2Zvcm09InJvdGF0ZSgtMTAgMjkwIDQ2MCkiLz4KICA8bGluZSB4MT0iMjU0IiB5MT0iMjQ1IiB4Mj0iMjM4IiB5Mj0iNDkwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC4xMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjI0MCIgeTE9IjIzMCIgeDI9IjQ0MCIgeTI9IjIzMCIgc3Ryb2tlPSIjRThBMDUwIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC45Ii8+CiAgPHJlY3QgeD0iMjY4IiB5PSI0NDAiIHdpZHRoPSI1MiIgaGVpZ2h0PSI0NiIgcng9IjQiIGZpbGw9IiNEMEVBRjUiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPgogIDxyZWN0IHg9IjMyMCIgeT0iNDQ1IiB3aWR0aD0iNDgiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjRDBFQUY1IiBvcGFjaXR5PSIwLjE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1vcGFjaXR5PSIwLjM1Ii8+CiAgPHRleHQgeD0iMzQwIiB5PSIxODYiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBzZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iI0M4ODczQSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9IjEwIiBvcGFjaXR5PSIwLjkiPlRIRTwvdGV4dD4KICA8dGV4dCB4PSIzNDAiIHk9IjU2MiIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjM4IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRjVEOUE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iNiI+Q0VMTEFSPC90ZXh0PgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjE3NCIgcj0iMyIgZmlsbD0iI0M4ODczQSIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iNDgwIiBjeT0iMTc0IiByPSIzIiBmaWxsPSIjQzg4NzNBIiBvcGFjaXR5PSIwLjYiLz4KICA8bGluZSB4MT0iMTQwIiB5MT0iNTI4IiB4Mj0iNTQwIiB5Mj0iNTI4IiBzdHJva2U9IiNDODg3M0EiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC40Ii8+CiAgPHBhdGggZD0iTSAxMDAgODAgTCA4MCA4MCBMIDgwIDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gNTgwIDgwIEwgNjAwIDgwIEwgNjAwIDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gMTAwIDYwMCBMIDgwIDYwMCBMIDgwIDU4MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gNTgwIDYwMCBMIDYwMCA2MDAgTCA2MDAgNTgwIiBmaWxsPSJub25lIiBzdHJva2U9IiNDODg3M0EiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjM1Ii8+CjwvZz4KPHJlY3QgeD0iNDAiIHk9IjQwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgcng9IjEzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEI1QTFBIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNSIvPgo8L3N2Zz4=">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDY4MCA2ODAiIHJvbGU9ImltZyIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGRlZnM+CiAgPGNsaXBQYXRoIGlkPSJyb3VuZGVkIj4KICAgIDxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIHJ4PSIxMzAiLz4KICA8L2NsaXBQYXRoPgo8L2RlZnM+CjxnIGNsaXAtcGF0aD0idXJsKCNyb3VuZGVkKSI+CiAgPHJlY3QgeD0iNDAiIHk9IjQwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgZmlsbD0iIzFBMEYwNiIvPgogIDxyZWN0IHg9IjQwIiB5PSI0MCIgd2lkdGg9IjYwMCIgaGVpZ2h0PSI2MDAiIGZpbGw9IiMyMTE0MDgiLz4KICA8ZWxsaXBzZSBjeD0iMzQwIiBjeT0iMjAwIiByeD0iMjIwIiByeT0iMTYwIiBmaWxsPSIjOEI1QTFBIiBvcGFjaXR5PSIwLjE4Ii8+CiAgPGVsbGlwc2UgY3g9IjM0MCIgY3k9IjUwMCIgcng9IjI2MCIgcnk9IjEyMCIgZmlsbD0iIzNEMUYwNiIgb3BhY2l0eT0iMC42Ii8+CiAgPGxpbmUgeDE9IjE0MCIgeTE9IjEzMCIgeDI9IjU0MCIgeTI9IjEzMCIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEiIG9wYWNpdHk9IjAuNCIvPgogIDxsaW5lIHgxPSIxNzAiIHkxPSIxNDIiIHgyPSI1MTAiIHkyPSIxNDIiIHN0cm9rZT0iI0M4ODczQSIgc3Ryb2tlLXdpZHRoPSIwLjUiIG9wYWNpdHk9IjAuMiIvPgogIDxwYXRoIGQ9Ik0gMjQwIDIzMCBMIDIyMCA1MDAgTCA0NjAgNTAwIEwgNDQwIDIzMCBaIiBmaWxsPSIjQzg4NzNBIiBvcGFjaXR5PSIwLjEyIi8+CiAgPHBhdGggZD0iTSAyNDAgMjMwIEwgMjIwIDUwMCBMIDQ2MCA1MDAgTCA0NDAgMjMwIFoiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0M4ODczQSIgc3Ryb2tlLXdpZHRoPSIzIiBvcGFjaXR5PSIwLjkiLz4KICA8cGF0aCBkPSJNIDIyNiA0MjAgTCAyMjIgNTAwIEwgNDU4IDUwMCBMIDQ1NCA0MjAgWiIgZmlsbD0iI0M4ODczQSIgb3BhY2l0eT0iMC41NSIvPgogIDxwYXRoIGQ9Ik0gMjI2IDQyMCBMIDQ1NCA0MjAiIHN0cm9rZT0iI0U4QTA1MCIgc3Ryb2tlLXdpZHRoPSIxLjUiIG9wYWNpdHk9IjAuNyIvPgogIDxlbGxpcHNlIGN4PSIyOTAiIGN5PSI0NjAiIHJ4PSIyOCIgcnk9IjEwIiBmaWxsPSIjRjVEOUE4IiBvcGFjaXR5PSIwLjE1IiB0cmFuc2Zvcm09InJvdGF0ZSgtMTAgMjkwIDQ2MCkiLz4KICA8bGluZSB4MT0iMjU0IiB5MT0iMjQ1IiB4Mj0iMjM4IiB5Mj0iNDkwIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC4xMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+CiAgPGxpbmUgeDE9IjI0MCIgeTE9IjIzMCIgeDI9IjQ0MCIgeTI9IjIzMCIgc3Ryb2tlPSIjRThBMDUwIiBzdHJva2Utd2lkdGg9IjIuNSIgb3BhY2l0eT0iMC45Ii8+CiAgPHJlY3QgeD0iMjY4IiB5PSI0NDAiIHdpZHRoPSI1MiIgaGVpZ2h0PSI0NiIgcng9IjQiIGZpbGw9IiNEMEVBRjUiIG9wYWNpdHk9IjAuMjIiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iMSIgc3Ryb2tlLW9wYWNpdHk9IjAuNCIvPgogIDxyZWN0IHg9IjMyMCIgeT0iNDQ1IiB3aWR0aD0iNDgiIGhlaWdodD0iNDQiIHJ4PSI0IiBmaWxsPSIjRDBFQUY1IiBvcGFjaXR5PSIwLjE4IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjEiIHN0cm9rZS1vcGFjaXR5PSIwLjM1Ii8+CiAgPHRleHQgeD0iMzQwIiB5PSIxODYiIGZvbnQtZmFtaWx5PSJHZW9yZ2lhLCBzZXJpZiIgZm9udC1zaXplPSIyNiIgZm9udC13ZWlnaHQ9IjQwMCIgZmlsbD0iI0M4ODczQSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgbGV0dGVyLXNwYWNpbmc9IjEwIiBvcGFjaXR5PSIwLjkiPlRIRTwvdGV4dD4KICA8dGV4dCB4PSIzNDAiIHk9IjU2MiIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsIHNlcmlmIiBmb250LXNpemU9IjM4IiBmb250LXdlaWdodD0iNzAwIiBmaWxsPSIjRjVEOUE4IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iNiI+Q0VMTEFSPC90ZXh0PgogIDxjaXJjbGUgY3g9IjIwMCIgY3k9IjE3NCIgcj0iMyIgZmlsbD0iI0M4ODczQSIgb3BhY2l0eT0iMC42Ii8+CiAgPGNpcmNsZSBjeD0iNDgwIiBjeT0iMTc0IiByPSIzIiBmaWxsPSIjQzg4NzNBIiBvcGFjaXR5PSIwLjYiLz4KICA8bGluZSB4MT0iMTQwIiB5MT0iNTI4IiB4Mj0iNTQwIiB5Mj0iNTI4IiBzdHJva2U9IiNDODg3M0EiIHN0cm9rZS13aWR0aD0iMSIgb3BhY2l0eT0iMC40Ii8+CiAgPHBhdGggZD0iTSAxMDAgODAgTCA4MCA4MCBMIDgwIDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gNTgwIDgwIEwgNjAwIDgwIEwgNjAwIDEwMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gMTAwIDYwMCBMIDgwIDYwMCBMIDgwIDU4MCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjQzg4NzNBIiBzdHJva2Utd2lkdGg9IjEuNSIgb3BhY2l0eT0iMC4zNSIvPgogIDxwYXRoIGQ9Ik0gNTgwIDYwMCBMIDYwMCA2MDAgTCA2MDAgNTgwIiBmaWxsPSJub25lIiBzdHJva2U9IiNDODg3M0EiIHN0cm9rZS13aWR0aD0iMS41IiBvcGFjaXR5PSIwLjM1Ii8+CjwvZz4KPHJlY3QgeD0iNDAiIHk9IjQwIiB3aWR0aD0iNjAwIiBoZWlnaHQ9IjYwMCIgcng9IjEzMCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOEI1QTFBIiBzdHJva2Utd2lkdGg9IjIiIG9wYWNpdHk9IjAuNSIvPgo8L3N2Zz4=">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Cellar">
+<meta name="theme-color" content="#1A0F06">
+<link rel="manifest" href="./manifest.json">
+</head>
+<body>
+<div class="hero">
+  <div class="hero-orn">— Welcome —</div>
+  <h1>The <em>Cellar</em></h1>
+  <div class="hero-tagline">厳選したウイスキーと、それに寄り添う料理をお楽しみください</div>
+  <div class="hero-line"></div>
+</div>
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-logo">The Cellar</div>
+    <button class="nav-tab active" onclick="switchTab('whisky')">🥃 ウイスキー</button>
+    <button class="nav-tab" onclick="switchTab('food')">🍽 フード</button>
+  </div>
+</nav>
+<div class="wrap">
+  <div class="section active" id="sec-whisky">
+    <div class="sec-hd">
+      <div class="sec-hd-label">Our Selection</div>
+      <div class="sec-hd-title">ウイスキー <em>リスト</em></div>
+      <div class="sec-hd-line"></div>
+    </div>
+    <div class="search-bar">
+      <input class="search-input" type="search" id="w-search" placeholder="銘柄名・蒸留所で検索..." oninput="renderW()">
+      <select class="filter-select" id="w-reg" onchange="toggleRegionFilter();renderW()">
+        <option value="">すべての産地</option>
+        <option>スコットランド</option><option>日本</option><option>アイルランド</option>
+        <option>アメリカ</option><option>カナダ</option><option>その他</option>
+      </select>
+      <select class="filter-select" id="w-sr" onchange="renderW()" style="display:none">
+        <option value="">すべての地域</option>
+        <option>スペイサイド</option><option>ハイランド</option><option>ローランド</option>
+        <option>キャンベルタウン</option><option>アイラ</option><option>アイランズ</option>
+      </select>
+      <select class="filter-select" id="w-type" onchange="renderW()">
+        <option value="">すべてのタイプ</option>
+        <option>シングルモルト</option><option>ブレンデッド</option><option>グレーン</option>
+      </select>
+      <select class="filter-select" id="w-stock" onchange="renderW()">
+        <option value="">在庫：すべて</option>
+        <option value="in">在庫あり</option>
+        <option value="out">在庫なし</option>
+      </select>
+      <select class="filter-select" id="w-note" onchange="renderW()">
+        <option value="">すべての特徴</option>
+        <option>ピート</option><option>スモーキー</option><option>フルーティー</option>
+        <option>バニラ</option><option>キャラメル</option><option>スパイシー</option>
+        <option>フローラル</option><option>ハチミツ</option><option>ウッディー</option>
+        <option>シトラス</option><option>ナッツ</option><option>チョコレート</option>
+      </select>
+      <select class="filter-select" id="w-sort" onchange="renderW()">
+        <option value="date-desc">登録日（新しい順）</option>
+        <option value="date-asc">登録日（古い順）</option>
+        <option value="name-asc">銘柄名（A→Z）</option>
+        <option value="name-desc">銘柄名（Z→A）</option>
+        <option value="region-asc">産地別</option>
+        <option value="type-asc">タイプ別</option>
+        <option value="age-asc">熟成年数（短い順）</option>
+        <option value="age-desc">熟成年数（長い順）</option>
+        <option value="rating-desc">評価（高い順）</option>
+        <option value="price-asc">価格（安い順）</option>
+        <option value="price-desc">価格（高い順）</option>
+      </select>
+    </div>
+    <div class="result-count" id="w-count"></div>
+    <div id="w-grid"><div class="loading"><div class="loading-icon">🥃</div><p>メニューを読み込んでいます...</p></div></div>
+  </div>
+  <div class="section" id="sec-food">
+    <div class="sec-hd">
+      <div class="sec-hd-label">Food Menu</div>
+      <div class="sec-hd-title">フード <em>メニュー</em></div>
+      <div class="sec-hd-line"></div>
+    </div>
+    <div class="search-bar">
+      <input class="search-input" type="search" id="f-search" placeholder="料理名で検索..." oninput="renderF()">
+      <select class="filter-select" id="f-cat" onchange="renderF()">
+        <option value="">すべてのカテゴリー</option>
+        <option>おつまみ</option><option>前菜</option><option>メイン</option>
+        <option>デザート</option><option>ウイスキーペアリング</option>
+      </select>
+    </div>
+    <div class="result-count" id="f-count"></div>
+    <div id="f-grid"><div class="loading"><div class="loading-icon">🍽</div><p>メニューを読み込んでいます...</p></div></div>
+  </div>
+</div>
+<div class="modal-bg" id="m-det">
+<div class="modal">
+  <button class="modal-close" onclick="cm()">✕</button>
+  <div id="det-img-wrap"></div>
+  <div class="modal-body" id="det-body"></div>
+</div>
+</div>
+<script>
+let D={whisky:[],food:[]};
+async function load(){
+  try{
+    // data.jsonをGitHub Pagesから取得（キャッシュ無効化）
+    const res = await fetch('./data.json?t='+Date.now());
+    if(!res.ok) throw new Error('status '+res.status);
+    const data = await res.json();
+    D.whisky = data.whisky || [];
+    D.food   = data.food   || [];
+  }catch(e){
+    D.whisky = [];
+    D.food   = [];
+    console.warn('data.json load failed:', e);
+  }
+  renderW();renderF();
+}
+function switchTab(name){
+  document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',['whisky','food'][i]===name));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+name).classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function cm(){document.getElementById('m-det').classList.remove('open');}
+function starsHtml(r){return[1,2,3,4,5].map(i=>`<span class="star${i>r?' e':''}">\u2605</span>`).join('');}
+function toggleRegionFilter(){
+  const reg=document.getElementById('w-reg').value;
+  document.getElementById('w-sr').style.display=reg==='スコットランド'?'inline-block':'none';
+  if(reg!=='スコットランド')document.getElementById('w-sr').value='';
+}
+function renderW(){
+  const q=document.getElementById('w-search').value.toLowerCase();
+  const reg=document.getElementById('w-reg').value;
+  const sr=document.getElementById('w-sr').value;
+  const wtype=document.getElementById('w-type').value;
+  const note=document.getElementById('w-note').value;
+  const stockFilter=document.getElementById('w-stock').value;
+  const items=D.whisky.filter(w=>{
+    if(q&&!w.name.toLowerCase().includes(q)&&!(w.distillery||'').toLowerCase().includes(q))return false;
+    if(reg&&w.region!==reg)return false;
+    if(sr&&w.scotland!==sr)return false;
+    if(wtype&&w.type!==wtype)return false;
+    if(note&&(!w.notes||!w.notes.includes(note)))return false;
+    if(stockFilter&&(w.status||'in')!==stockFilter)return false;
+    return true;
+  });
+  // ソート
+  const sortKey=document.getElementById('w-sort').value;
+  items.sort((a,b)=>{
+    switch(sortKey){
+      case 'date-asc':    return (a.date||'').localeCompare(b.date||'');
+      case 'date-desc':   return (b.date||'').localeCompare(a.date||'');
+      case 'name-asc':    return (a.name||'').localeCompare(b.name||'','ja');
+      case 'name-desc':   return (b.name||'').localeCompare(a.name||'','ja');
+      case 'region-asc':  return ((a.region||'')+(a.scotland||'')).localeCompare((b.region||'')+(b.scotland||''),'ja');
+      case 'type-asc':    return (a.type||'').localeCompare(b.type||'','ja');
+      case 'age-asc':     return (parseInt(a.age)||0)-(parseInt(b.age)||0);
+      case 'age-desc':    return (parseInt(b.age)||0)-(parseInt(a.age)||0);
+      case 'rating-desc': return (b.rating||0)-(a.rating||0);
+      case 'price-asc':   return (a.price||0)-(b.price||0);
+      case 'price-desc':  return (b.price||0)-(a.price||0);
+      default: return 0;
+    }
+  });
+  document.getElementById('w-count').textContent=items.length?items.length+'本のウイスキー':'';
+  const g=document.getElementById('w-grid');
+  if(!items.length){g.innerHTML='<div class="empty"><div class="empty-icon">\uD83E\uDD43</div><p>該当するウイスキーが見つかりません</p></div>';return;}
+  g.innerHTML='<div class="grid">'+items.map(w=>`
+    <div class="card" onclick="showW(${w.id})">
+      <div class="card-thumb">${w.img?`<img src="${w.img}" alt="${w.name}"><div class="card-thumb-ov"></div>`:'\uD83E\uDD43'}</div>
+      <div class="card-body">
+        <div class="card-cat">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' · '+w.type:''}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
+        <div class="card-name">${w.name}</div>
+        ${w.distillery?`<div class="card-meta">${w.distillery}</div>`:''}
+        <div class="stars">${starsHtml(w.rating)}</div>
+        ${w.notes&&w.notes.length?`<div class="card-tags">${w.notes.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`:''}
+        ${w.memo?`<div class="card-note">${w.memo}</div>`:''}
+      </div>
+      <div class="card-foot">
+        <span class="${(w.status||'in')==='in'?'st-in':'st-out'}">${(w.status||'in')==='in'?'在庫あり':'在庫なし'}</span>
+        ${w.price?`<span class="card-price">&yen;${w.price.toLocaleString()}<span style="font-size:11px;font-family:'Crimson Pro',serif;color:var(--text-light)"> / shot</span></span>`:''}
+      </div>
+    </div>`).join('')+'</div>';
+}
+function renderF(){
+  const q=document.getElementById('f-search').value.toLowerCase();
+  const cat=document.getElementById('f-cat').value;
+  const items=D.food.filter(f=>{
+    if(q&&!f.name.toLowerCase().includes(q))return false;
+    if(cat&&f.category!==cat)return false;
+    return true;
+  });
+  document.getElementById('f-count').textContent=items.length?items.length+'品のフードメニュー':'';
+  const g=document.getElementById('f-grid');
+  if(!items.length){g.innerHTML='<div class="empty"><div class="empty-icon">\uD83C\uDF7D</div><p>該当する料理が見つかりません</p></div>';return;}
+  g.innerHTML='<div class="grid">'+items.map(f=>`
+    <div class="card" onclick="showF(${f.id})">
+      <div class="card-thumb">${f.img?`<img src="${f.img}" alt="${f.name}"><div class="card-thumb-ov"></div>`:'\uD83C\uDF7D'}</div>
+      <div class="card-body">
+        <div class="card-cat">${f.category}</div>
+        <div class="card-name">${f.name}</div>
+        ${f.pairing?`<div class="card-meta">\uD83E\uDD43 ${f.pairing}</div>`:''}
+        <div class="stars">${starsHtml(f.rating)}</div>
+        ${f.memo?`<div class="card-note">${f.memo}</div>`:''}
+      </div>
+      ${f.price?`<div class="card-foot"><span style="font-size:12px;color:var(--text-light)">Price</span><span class="card-price">&yen;${f.price.toLocaleString()}</span></div>`:''}
+    </div>`).join('')+'</div>';
+}
+function showW(id){
+  const w=D.whisky.find(i=>i.id===id);if(!w)return;
+  document.getElementById('det-img-wrap').innerHTML=w.img?`<img class="modal-img" src="${w.img}" alt="${w.name}">`:'<div class="modal-img-ph">\uD83E\uDD43</div>';
+  document.getElementById('det-body').innerHTML=`
+    <div class="modal-region">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' — '+w.type:''}</div>
+    <div class="modal-name">${w.name}</div>
+    ${w.distillery?`<div class="modal-dist">${w.distillery}</div>`:''}
+    <div class="stars">${starsHtml(w.rating)}</div>
+    <div class="modal-meta-grid">
+      ${w.age?`<div class="meta-cell"><div class="meta-lbl">熟成年数</div><div class="meta-val">${w.age}</div></div>`:''}
+      ${w.abv?`<div class="meta-cell"><div class="meta-lbl">アルコール度数</div><div class="meta-val">${w.abv}</div></div>`:''}
+      ${w.price?`<div class="meta-cell"><div class="meta-lbl">1 Shot</div><div class="meta-val">&yen;${w.price.toLocaleString()}</div></div>`:''}
+      <div class="meta-cell"><div class="meta-lbl">在庫</div><div class="meta-val"><span class="${(w.status||'in')==='in'?'st-in':'st-out'}">${(w.status||'in')==='in'?'あり':'なし'}</span></div></div>
+      ${w.opened?`<div class="meta-cell"><div class="meta-lbl">開封日</div><div class="meta-val">${w.opened}</div></div>`:''}
+    </div>
+    ${w.notes&&w.notes.length?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px">${w.notes.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`:''}
+    ${w.memo?`<div class="modal-note">${w.memo}</div>`:''}`;
+  document.getElementById('m-det').classList.add('open');
+}
+function showF(id){
+  const f=D.food.find(i=>i.id===id);if(!f)return;
+  document.getElementById('det-img-wrap').innerHTML=f.img?`<img class="modal-img" src="${f.img}" alt="${f.name}">`:'<div class="modal-img-ph">\uD83C\uDF7D</div>';
+  document.getElementById('det-body').innerHTML=`
+    <div class="modal-region">${f.category}</div>
+    <div class="modal-name">${f.name}</div>
+    <div class="stars">${starsHtml(f.rating)}</div>
+    ${f.price?`<div class="modal-meta-grid"><div class="meta-cell"><div class="meta-lbl">1 Shot</div><div class="meta-val">&yen;${f.price.toLocaleString()}</div></div></div>`:''}
+    ${f.pairing?`<div class="pairing-box">\uD83E\uDD43 おすすめペアリング：${f.pairing}</div>`:''}
+    ${f.memo?`<div class="modal-note">${f.memo}</div>`:''}`;
+  document.getElementById('m-det').classList.add('open');
+}
+document.getElementById('m-det').addEventListener('click',e=>{if(e.target===document.getElementById('m-det'))cm();});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)load();});
+load();
+</script>
+</body>
+</html>
