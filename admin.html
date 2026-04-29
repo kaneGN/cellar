@@ -213,7 +213,10 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <span>③</span> <code>data.json</code> をクリック → 鉛筆アイコン → 内容を貼り付けて「Commit changes」
       </div>
     </div>
-    <button class="btn-publish" id="export-btn" onclick="exportData()">🌐 GitHubに公開（データなし）</button>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn-publish" id="export-btn" onclick="exportData()">🌐 GitHubに公開（データなし）</button>
+      <button class="btn-publish" style="background:var(--surface2);border:1px solid var(--border-strong);color:var(--amber);" onclick="forceReloadFromGitHub()">🔄 GitHubから再読み込み</button>
+    </div>
   </div>
 
   <div class="stats-row">
@@ -518,7 +521,7 @@ const ADMIN_PW = 'cellar2025';
 //   画像          → ImgBB（クラウド・永久保存・無料）
 //                   imgbbUrl に URL を保存、img(base64) は使わない
 // ─────────────────────────────────────────────
-const SK = 'cellar-v5-text'; // テキスト専用キー（画像なし）
+const SK = 'cellar-v6-text'; // テキスト専用キー（画像なし）
 // ↓ ImgBBのAPIキー。https://imgbb.com でアカウント作成→API取得
 const IMGBB_KEY = '01fea6a54e3c306148503bd65406ff30';
 
@@ -539,39 +542,69 @@ document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='E
 
 async function load(){
   let loaded = false;
-  // まずlocalStorageから読み込む（最新の編集データ）
+
+  // ① まずlocalStorageを確認
   try{
     const raw = localStorage.getItem(SK);
     if(raw){
       const s = JSON.parse(raw);
-      D.whisky   = s.whisky   || [];
-      D.food     = s.food     || [];
-      D.wishlist = s.wishlist || [];
-      D.costs    = s.costs    || [];
-      loaded = true;
-      showToastMsg('✓ 読み込み完了（ウイスキー'+D.whisky.length+'本）');
+      const wc = (s.whisky||[]).length;
+      if(wc > 0){
+        D.whisky   = s.whisky   || [];
+        D.food     = s.food     || [];
+        D.wishlist = s.wishlist || [];
+        D.costs    = s.costs    || [];
+        loaded = true;
+        showToastMsg('✓ 読み込み完了（ウイスキー'+wc+'本）');
+      }
     }
   }catch(e){ console.warn('localStorage load error:', e); }
 
-  // localStorageが空の場合はGitHubのdata.jsonから復元
+  // ② localStorageが空またはデータなし → GitHubのdata.jsonから取得
   if(!loaded){
+    showToastMsg('📡 GitHubからデータを読み込み中...');
     try{
       const res = await fetch('./data.json?t='+Date.now());
       if(res.ok){
         const s = await res.json();
-        D.whisky   = s.whisky   || [];
-        D.food     = s.food     || [];
-        D.wishlist = [];
-        D.costs    = [];
-        loaded = true;
-        showToastMsg('📡 GitHubのデータを読み込みました。保存してください。');
+        const wc = (s.whisky||[]).length;
+        if(wc > 0){
+          D.whisky   = s.whisky || [];
+          D.food     = s.food   || [];
+          D.wishlist = s.wishlist || [];
+          D.costs    = s.costs    || [];
+          loaded = true;
+          // localStorageにも保存（次回から高速読み込み）
+          const textData = {
+            whisky:   D.whisky.map(w=>({...w, img:null})),
+            food:     D.food.map(f=>({...f,   img:null})),
+            wishlist: D.wishlist,
+            costs:    D.costs
+          };
+          try{ localStorage.setItem(SK, JSON.stringify(textData)); }catch(e){}
+          showToastMsg('✓ '+wc+'本のデータを読み込みました！');
+        } else {
+          showToastMsg('⚠️ data.jsonは空です');
+        }
+      } else {
+        showToastMsg('⚠️ data.jsonの取得に失敗（'+res.status+'）');
       }
-    }catch(e){ console.warn('data.json load error:', e); }
+    }catch(e){
+      showToastMsg('⚠️ ネット接続を確認してください');
+      console.warn('data.json load error:', e);
+    }
   }
 
-  if(!loaded) showToastMsg('新規：データを登録してください');
+  if(!loaded) showToastMsg('データなし：新規登録してください');
   renderAll();
   updateExportBtn();
+}
+
+// GitHubから強制再読み込み（localStorageを無視）
+async function forceReloadFromGitHub(){
+  if(!confirm('GitHubのdata.jsonから再読み込みします。\n現在の編集内容は上書きされます。よろしいですか？')) return;
+  localStorage.removeItem(SK);
+  await load();
 }
 
 function save(){
