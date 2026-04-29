@@ -216,6 +216,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
       <button class="btn-publish" id="export-btn" onclick="exportData()">🌐 GitHubに公開（データなし）</button>
       <button class="btn-publish" style="background:var(--surface2);border:1px solid var(--border-strong);color:var(--amber);" onclick="forceReloadFromGitHub()">🔄 GitHubから再読み込み</button>
+      <button class="btn-publish" style="background:var(--surface2);border:1px solid var(--border-strong);color:#e07070;" onclick="fixImgBBUrls()">🔧 画像URL修正</button>
     </div>
   </div>
 
@@ -607,6 +608,30 @@ async function forceReloadFromGitHub(){
   await load();
 }
 
+// ImgBBのURLを正しい画像URLに一括修正
+// ibb.co/xxxx → i.ibb.co/xxxx/filename.jpg 形式に変換を試みる
+async function fixImgBBUrls(){
+  let fixed = 0;
+  for(const item of [...D.whisky, ...D.food]){
+    const url = item.imgbbUrl || item.img || '';
+    // ibb.co（表示ページURL）が入っている場合は再アップロードが必要
+    if(url && url.includes('ibb.co') && !url.includes('i.ibb.co')){
+      // 直接修正できないため、imgを一時的にnullにして再登録を促す
+      item._badUrl = url;
+      item.imgbbUrl = '';
+      item.img = null;
+      fixed++;
+    }
+  }
+  if(fixed > 0){
+    save();
+    renderAll();
+    showToastMsg('⚠️ '+fixed+'件の画像URLが無効です。各ウイスキーを編集して写真を再登録してください。');
+  } else {
+    showToastMsg('✓ すべての画像URLは正常です');
+  }
+}
+
 function save(){
   // 画像URLのみ保存（base64は保存しない→容量問題を根絶）
   const textData = {
@@ -639,7 +664,7 @@ async function uploadToImgBB(base64data){
     });
     const json = await res.json();
     if(json.success){
-      return json.data.url; // 永久保存URL
+      return json.data.display_url; // 直接表示できる画像URL
     }
     console.error('ImgBB error:', json);
     return null;
