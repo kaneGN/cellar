@@ -213,11 +213,8 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <span>③</span> <code>data.json</code> をクリック → 鉛筆アイコン → 内容を貼り付けて「Commit changes」
       </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-      <button class="btn-publish" id="export-btn" onclick="exportData()">🌐 GitHubに公開（データなし）</button>
-      <button class="btn-publish" style="background:var(--surface2);border:1px solid var(--border-strong);color:var(--amber);" onclick="forceReloadFromGitHub()">🔄 GitHubから再読み込み</button>
-      <button class="btn-publish" style="background:var(--surface2);border:1px solid var(--border-strong);color:#e07070;" onclick="fixImgBBUrls()">🔧 画像URL修正</button>
-    </div>
+    <button class="btn-publish" id="export-btn" onclick="exportData()">🌐 GitHubに公開（データなし）</button>
+      <button class="btn-publish" style="background:rgba(200,135,58,0.2);border:1px solid var(--amber);color:var(--amber);" onclick="convertAllBase64ToImgBB()">☁️ 画像を一括クラウド変換</button>
   </div>
 
   <div class="stats-row">
@@ -513,17 +510,6 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 
 <script>
 const ADMIN_PW = 'cellar2025';
-// ── ストレージ設定 ──
-// テキスト＋画像 → localStorage（管理者ブラウザに保存）
-// 公開データ    → data.json（GitHubにアップで共有）
-// ─────────────────────────────────────────────
-// ストレージ設計：
-//   テキストデータ → localStorage（軽い・確実）
-//   画像          → ImgBB（クラウド・永久保存・無料）
-//                   imgbbUrl に URL を保存、img(base64) は使わない
-// ─────────────────────────────────────────────
-const SK = 'cellar-v6-text'; // テキスト専用キー（画像なし）
-// ↓ ImgBBのAPIキー。https://imgbb.com でアカウント作成→API取得
 const IMGBB_KEY = '01fea6a54e3c306148503bd65406ff30';
 
 let D = {whisky:[],food:[],wishlist:[],costs:[]};
@@ -541,149 +527,33 @@ function doLogin(){
 }
 document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
+// 毎回GitHubのdata.jsonから読み込む（localStorageは使わない）
 async function load(){
-  let loaded = false;
-
-  // ① まずlocalStorageを確認
+  showToastMsg('📡 データを読み込み中...');
   try{
-    const raw = localStorage.getItem(SK);
-    if(raw){
-      const s = JSON.parse(raw);
-      const wc = (s.whisky||[]).length;
-      if(wc > 0){
-        D.whisky   = s.whisky   || [];
-        D.food     = s.food     || [];
-        D.wishlist = s.wishlist || [];
-        D.costs    = s.costs    || [];
-        loaded = true;
-        showToastMsg('✓ 読み込み完了（ウイスキー'+wc+'本）');
-      }
-    }
-  }catch(e){ console.warn('localStorage load error:', e); }
-
-  // ② localStorageが空またはデータなし → GitHubのdata.jsonから取得
-  if(!loaded){
-    showToastMsg('📡 GitHubからデータを読み込み中...');
-    try{
-      const res = await fetch('./data.json?t='+Date.now());
-      if(res.ok){
-        const s = await res.json();
-        const wc = (s.whisky||[]).length;
-        if(wc > 0){
-          D.whisky   = s.whisky || [];
-          D.food     = s.food   || [];
-          D.wishlist = s.wishlist || [];
-          D.costs    = s.costs    || [];
-          loaded = true;
-          // localStorageにも保存（次回から高速読み込み）
-          const textData = {
-            whisky:   D.whisky.map(w=>({...w, img:null})),
-            food:     D.food.map(f=>({...f,   img:null})),
-            wishlist: D.wishlist,
-            costs:    D.costs
-          };
-          try{ localStorage.setItem(SK, JSON.stringify(textData)); }catch(e){}
-          showToastMsg('✓ '+wc+'本のデータを読み込みました！');
-        } else {
-          showToastMsg('⚠️ data.jsonは空です');
-        }
-      } else {
-        showToastMsg('⚠️ data.jsonの取得に失敗（'+res.status+'）');
-      }
-    }catch(e){
-      showToastMsg('⚠️ ネット接続を確認してください');
-      console.warn('data.json load error:', e);
-    }
+    const res = await fetch('./data.json?t='+Date.now());
+    if(!res.ok) throw new Error('HTTP '+res.status);
+    const s = await res.json();
+    D.whisky   = s.whisky   || [];
+    D.food     = s.food     || [];
+    D.wishlist = s.wishlist || [];
+    D.costs    = s.costs    || [];
+    showToastMsg('✓ '+D.whisky.length+'本のデータを読み込みました');
+  }catch(e){
+    showToastMsg('❌ 読み込み失敗: '+e.message);
+    console.error('load error:', e);
   }
-
-  if(!loaded) showToastMsg('データなし：新規登録してください');
   renderAll();
   updateExportBtn();
 }
 
-// GitHubから強制再読み込み（localStorageを無視）
-async function forceReloadFromGitHub(){
-  if(!confirm('GitHubのdata.jsonから再読み込みします。\n現在の編集内容は上書きされます。よろしいですか？')) return;
-  localStorage.removeItem(SK);
-  await load();
-}
-
-// ImgBBのURLを正しい画像URLに一括修正
-// ibb.co/xxxx → i.ibb.co/xxxx/filename.jpg 形式に変換を試みる
-async function fixImgBBUrls(){
-  let fixed = 0;
-  for(const item of [...D.whisky, ...D.food]){
-    const url = item.imgbbUrl || item.img || '';
-    // ibb.co（表示ページURL）が入っている場合は再アップロードが必要
-    if(url && url.includes('ibb.co') && !url.includes('i.ibb.co')){
-      // 直接修正できないため、imgを一時的にnullにして再登録を促す
-      item._badUrl = url;
-      item.imgbbUrl = '';
-      item.img = null;
-      fixed++;
-    }
-  }
-  if(fixed > 0){
-    save();
-    renderAll();
-    showToastMsg('⚠️ '+fixed+'件の画像URLが無効です。各ウイスキーを編集して写真を再登録してください。');
-  } else {
-    showToastMsg('✓ すべての画像URLは正常です');
-  }
-}
-
+// 保存 = data.jsonとしてダウンロード（localStorageは使わない）
 function save(){
-  // 画像URLのみ保存（base64は保存しない→容量問題を根絶）
-  const textData = {
-    whisky:   D.whisky.map(w=>({...w, img: null})),
-    food:     D.food.map(f=>({...f,   img: null})),
+  const exportObj = {
+    whisky:   D.whisky,
+    food:     D.food,
     wishlist: D.wishlist,
     costs:    D.costs
-  };
-  try{
-    localStorage.setItem(SK, JSON.stringify(textData));
-    showToastMsg('✓ 保存しました（公開するには「GitHubに公開」を押してください）');
-  }catch(e){
-    showToastMsg('❌ 保存失敗：' + e.message);
-    console.error('save error:', e);
-  }
-  updateExportBtn();
-}
-
-// ImgBBに画像をアップロードしてURLを返す
-async function uploadToImgBB(base64data){
-  try{
-    // base64のヘッダー部分を除去
-    const b64 = base64data.replace(/^data:image\/\w+;base64,/, '');
-    const form = new FormData();
-    form.append('key', IMGBB_KEY);
-    form.append('image', b64);
-    const res = await fetch('https://api.imgbb.com/1/upload', {
-      method: 'POST',
-      body: form
-    });
-    const json = await res.json();
-    if(json.success){
-      return json.data.display_url; // 直接表示できる画像URL
-    }
-    console.error('ImgBB error:', json);
-    return null;
-  }catch(e){
-    console.error('ImgBB upload error:', e);
-    return null;
-  }
-}
-
-function exportData(){
-  const wc=D.whisky.length, fc=D.food.length;
-  if(wc===0&&fc===0){
-    alert('エクスポートするデータがありません。\nウイスキーまたは料理を先に追加してください。');
-    return;
-  }
-  // imgbbUrlがある場合はそれを使い、ない場合はimgをそのまま（base64）使う
-  const exportObj = {
-    whisky: D.whisky.map(w=>({...w, img: w.imgbbUrl || w.img || null})),
-    food:   D.food.map(f=>({...f,   img: f.imgbbUrl || f.img || null}))
   };
   const blob = new Blob([JSON.stringify(exportObj)],{type:'application/json'});
   const a = document.createElement('a');
@@ -691,8 +561,11 @@ function exportData(){
   a.download = 'data.json';
   a.click();
   URL.revokeObjectURL(a.href);
-  showToastMsg('✓ data.json をダウンロード（ウイスキー'+wc+'本・料理'+fc+'品）');
+  showToastMsg('✓ data.json をダウンロードしました。GitHubにアップしてください。');
+  updateExportBtn();
 }
+
+function exportData(){ save(); }
 
 function updateExportBtn(){
   const btn=document.getElementById('export-btn');
@@ -701,9 +574,59 @@ function updateExportBtn(){
   btn.textContent=(wc||fc)?'🌐 GitHubに公開（ウイスキー'+wc+'本・料理'+fc+'品）':'🌐 GitHubに公開（データなし）';
 }
 
+// base64画像をすべてImgBBにアップロードしてURLに変換する
+async function convertAllBase64ToImgBB(){
+  const targets = [
+    ...D.whisky.filter(w => (w.img||'').startsWith('data:')),
+    ...D.food.filter(f => (f.img||'').startsWith('data:'))
+  ];
+  if(targets.length === 0){
+    showToastMsg('✓ 変換が必要な画像はありません');
+    return;
+  }
+  if(!confirm(targets.length + '本の画像をImgBBにアップロードします。\n時間がかかる場合があります。続けますか？')){
+    return;
+  }
+  let success = 0, fail = 0;
+  for(let i = 0; i < targets.length; i++){
+    const item = targets[i];
+    showToastMsg('☁️ アップロード中... ' + (i+1) + '/' + targets.length + ' 「' + item.name + '」');
+    const url = await uploadToImgBB(item.img);
+    if(url){
+      item.img = url;
+      item.imgbbUrl = url;
+      success++;
+    } else {
+      fail++;
+    }
+    // レート制限を避けるため少し待機
+    await new Promise(r => setTimeout(r, 500));
+  }
+  renderAll();
+  showToastMsg('✓ 完了: ' + success + '本成功' + (fail > 0 ? ' / ' + fail + '本失敗' : '') + ' → 「GitHubに公開」を押してください');
+}
+
 function showToastMsg(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');t.textContent='保存しました ✓';},3500);
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');t.textContent='✓';},4000);
+}
+
+// ImgBBに画像をアップロードしてURLを返す
+async function uploadToImgBB(base64data){
+  try{
+    const b64 = base64data.replace(/^data:image\/\w+;base64,/, '');
+    const form = new FormData();
+    form.append('key', IMGBB_KEY);
+    form.append('image', b64);
+    const res = await fetch('https://api.imgbb.com/1/upload', {method:'POST', body:form});
+    const json = await res.json();
+    if(json.success) return json.data.display_url; // 直接表示できる画像URL
+    console.error('ImgBB error:', json);
+    return null;
+  }catch(e){
+    console.error('ImgBB upload error:', e);
+    return null;
+  }
 }
 
 function tab(name){
@@ -721,46 +644,37 @@ function prevImg(inp, prevId, prefix){
   showToastMsg('🖼 画像を処理中...');
   const reader = new FileReader();
   reader.onload = e => {
-    const original = e.target.result;
     const image = new Image();
     image.onload = async () => {
-      // Canvasでリサイズ・圧縮
       const MAX = 1200;
       let w = image.width, h = image.height;
       if(w > MAX || h > MAX){
-        if(w > h){ h = Math.round(h * MAX / w); w = MAX; }
-        else { w = Math.round(w * MAX / h); h = MAX; }
+        if(w > h){ h = Math.round(h*MAX/w); w = MAX; }
+        else { w = Math.round(w*MAX/h); h = MAX; }
       }
       const canvas = document.createElement('canvas');
       canvas.width = w; canvas.height = h;
       canvas.getContext('2d').drawImage(image, 0, 0, w, h);
       const compressed = canvas.toDataURL('image/jpeg', 0.82);
-
-      // プレビューを先に表示
       const el = document.getElementById(prevId);
       el.src = compressed;
       el.style.display = 'block';
-
-      // ImgBBにアップロード試行
-      showToastMsg('☁️ 画像をクラウドにアップロード中...');
+      showToastMsg('☁️ ImgBBにアップロード中...');
       const url = await uploadToImgBB(compressed);
       if(url){
-        // URLで管理（localStorage節約）
-        imgData[prefix] = {url: url, base64: null};
+        imgData[prefix] = url;
         showToastMsg('✓ 画像をクラウドに保存しました');
       } else {
-        // ImgBB未設定またはエラー時はbase64を一時利用
-        imgData[prefix] = {url: null, base64: compressed};
-        const kb = Math.round(compressed.length * 0.75 / 1024);
-        showToastMsg('📷 画像を取り込みました（'+kb+'KB）');
+        imgData[prefix] = compressed;
+        showToastMsg('⚠️ クラウド保存失敗。一時的にローカル保存します');
       }
     };
     image.onerror = () => {
       const el = document.getElementById(prevId);
-      el.src = original; el.style.display = 'block';
-      imgData[prefix] = {url: null, base64: original};
+      el.src = e.target.result; el.style.display = 'block';
+      imgData[prefix] = e.target.result;
     };
-    image.src = original;
+    image.src = e.target.result;
   };
   reader.readAsDataURL(file);
 }
@@ -783,8 +697,8 @@ function openW(id){
   document.getElementById('w-bottles').value = item ? (item.bottles||1) : 1;
   document.getElementById('w-opened').value  = item ? (item.opened||'') : '';
   const prev = document.getElementById('w-prev');
-  const wImgSrc = item ? (item.imgbbUrl||item.img||null) : null;
-  if(wImgSrc){prev.src=wImgSrc;prev.style.display='block';imgData.w={url:item.imgbbUrl||null,base64:item.img||null};}
+  const wSrc=item?(item.imgbbUrl||item.img||null):null;
+  if(wSrc){prev.src=wSrc;prev.style.display='block';imgData.w=wSrc;}
   else{prev.style.display='none';imgData.w=null;}
   document.querySelectorAll('#w-chips .chip').forEach(c=>c.classList.toggle('on', item&&item.notes&&item.notes.includes(c.textContent)));
   const r = item ? (item.rating||0) : 0;
@@ -803,8 +717,8 @@ function openF(id){
   document.getElementById('f-price').value = item ? (item.price||'') : '';
   document.getElementById('f-cat').value   = item ? (item.category||'おつまみ') : 'おつまみ';
   const prev = document.getElementById('f-prev');
-  const fImgSrc = item ? (item.imgbbUrl||item.img||null) : null;
-  if(fImgSrc){prev.src=fImgSrc;prev.style.display='block';imgData.f={url:item.imgbbUrl||null,base64:item.img||null};}
+  const fSrc=item?(item.imgbbUrl||item.img||null):null;
+  if(fSrc){prev.src=fSrc;prev.style.display='block';imgData.f=fSrc;}
   else{prev.style.display='none';imgData.f=null;}
   const r = item ? (item.rating||0) : 0;
   ratings.f=r;
@@ -844,8 +758,8 @@ function saveW(){
   const bottles=parseInt(document.getElementById('w-bottles').value)||1;
   const opened=document.getElementById('w-opened').value;
   const totalCost=cost*bottles;
-  const fields={name,distillery:document.getElementById('w-dist').value,region,scotland,type:document.getElementById('w-type').value,age:document.getElementById('w-age').value,abv:document.getElementById('w-abv').value,cost,price,bottles,opened,status:document.getElementById('w-stat').value,rating:ratings.w,notes:chips('w-chips'),memo:document.getElementById('w-memo').value,img: imgData.w ? (imgData.w.base64 || null) : null,
-    imgbbUrl: imgData.w ? (imgData.w.url || '') : ''};
+  const fields={name,distillery:document.getElementById('w-dist').value,region,scotland,type:document.getElementById('w-type').value,age:document.getElementById('w-age').value,abv:document.getElementById('w-abv').value,cost,price,bottles,opened,status:document.getElementById('w-stat').value,rating:ratings.w,notes:chips('w-chips'),memo:document.getElementById('w-memo').value,img: (typeof imgData.w === 'string') ? imgData.w : null,
+    imgbbUrl: ''};
   if(editId.w){
     // 更新
     const idx=D.whisky.findIndex(i=>i.id===editId.w);
@@ -869,8 +783,8 @@ function saveW(){
 function saveF(){
   const name=document.getElementById('f-name').value.trim();if(!name){alert('料理名を入力してください');return;}
   const price=parseInt(document.getElementById('f-price').value)||0;
-  const fields={name,category:document.getElementById('f-cat').value,price,pairing:document.getElementById('f-pair').value,rating:ratings.f,memo:document.getElementById('f-memo').value,img: imgData.f ? (imgData.f.base64 || null) : null,
-    imgbbUrl: imgData.f ? (imgData.f.url || '') : ''};
+  const fields={name,category:document.getElementById('f-cat').value,price,pairing:document.getElementById('f-pair').value,rating:ratings.f,memo:document.getElementById('f-memo').value,img: (typeof imgData.f === 'string') ? imgData.f : null,
+    imgbbUrl: ''};
   if(editId.f){
     const idx=D.food.findIndex(i=>i.id===editId.f);
     if(idx>=0)Object.assign(D.food[idx],fields);
@@ -956,7 +870,7 @@ function renderW(){
   const g=document.getElementById('w-grid');
   if(!items.length){g.innerHTML='<div class="empty-state"><div class="empty-icon">🥃</div><p>まだウイスキーが記録されていません</p></div>';return;}
   g.innerHTML=items.map(w=>`<div class="entry-card" onclick="showDet('whisky',${w.id})">
-    ${(w.imgbbUrl||w.img)?`<div class="card-thumb"><img src="${w.imgbbUrl||w.img}" alt="${w.name}"></div>`:'<div class="card-thumb">🥃</div>'}
+    ${w.img?`<div class="card-thumb"><img src="${w.img}" alt="${w.name}"></div>`:'<div class="card-thumb">🥃</div>'}
     <div class="card-body"><div class="card-cat">${w.region||'産地不明'}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
     <div class="card-title">${w.name}</div>${w.distillery?`<div class="card-sub">${w.distillery}</div>`:''}
     <div class="stars">${starsHtml(w.rating)}</div>
@@ -977,7 +891,7 @@ function renderF(){
   const g=document.getElementById('f-grid');
   if(!items.length){g.innerHTML='<div class="empty-state"><div class="empty-icon">🍽</div><p>まだ料理が記録されていません</p></div>';return;}
   g.innerHTML=items.map(f=>`<div class="entry-card" onclick="showDet('food',${f.id})">
-    ${(f.imgbbUrl||f.img)?`<div class="card-thumb"><img src="${f.imgbbUrl||f.img}" alt="${f.name}"></div>`:'<div class="card-thumb">🍽</div>'}
+    ${f.img?`<div class="card-thumb"><img src="${f.img}" alt="${f.name}"></div>`:'<div class="card-thumb">🍽</div>'}
     <div class="card-body"><div class="card-cat">${f.category}</div><div class="card-title">${f.name}</div>
     ${f.pairing?`<div class="card-sub">🥃 ${f.pairing}</div>`:''}
     <div class="stars">${starsHtml(f.rating)}</div>${f.memo?`<div class="card-note">${nl2br(f.memo)}</div>`:''}
@@ -1027,7 +941,7 @@ function showDet(type,id){
   const item=D[type].find(i=>i.id===id);if(!item)return;
   let html='';
   if(type==='whisky'){
-    html=`${(item.imgbbUrl||item.img)?`<img class="det-img" src="${item.imgbbUrl||item.img}" alt="${item.name}">`:'<div class="det-img-ph">🥃</div>'}
+    html=`${item.img?`<img class="det-img" src="${item.img}" alt="${item.name}">`:'<div class="det-img-ph">🥃</div>'}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
         <div><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">${item.region||'産地不明'}</div>
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream)">${item.name}</div>
@@ -1049,7 +963,7 @@ function showDet(type,id){
         <button class="btn btn-sm btn-danger" onclick="delItem('whisky',${id},event)">削除</button>
       </div>`;
   } else {
-    html=`${(item.imgbbUrl||item.img)?`<img class="det-img" src="${item.imgbbUrl||item.img}" alt="${item.name}">`:'<div class="det-img-ph">🍽</div>'}
+    html=`${item.img?`<img class="det-img" src="${item.img}" alt="${item.name}">`:'<div class="det-img-ph">🍽</div>'}
       <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">${item.category}</div>
       <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px">${item.name}</div>
       <div class="stars" style="margin-bottom:14px">${starsHtml(item.rating)}</div>
