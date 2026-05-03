@@ -530,18 +530,36 @@ document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='E
 // 毎回GitHubのdata.jsonから読み込む（localStorageは使わない）
 async function load(){
   showToastMsg('📡 データを読み込み中...');
-  try{
-    const res = await fetch('./data.json?t='+Date.now());
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const s = await res.json();
-    D.whisky   = s.whisky   || [];
-    D.food     = s.food     || [];
-    D.wishlist = s.wishlist || [];
-    D.costs    = s.costs    || [];
-    showToastMsg('✓ '+D.whisky.length+'本のデータを読み込みました');
-  }catch(e){
-    showToastMsg('❌ 読み込み失敗: '+e.message);
-    console.error('load error:', e);
+  // 複数のURLを順に試みる
+  const urls = [
+    './data.json?t='+Date.now(),
+    'https://kanegn.github.io/cellar/data.json?t='+Date.now(),
+    '/cellar/data.json?t='+Date.now()
+  ];
+  let loaded = false;
+  for(const url of urls){
+    try{
+      const res = await fetch(url);
+      if(!res.ok) continue;
+      const text = await res.text();
+      if(!text || text.trim() === '') continue;
+      const s = JSON.parse(text);
+      const wc = (s.whisky||[]).length;
+      if(wc === 0 && (s.food||[]).length === 0) continue;
+      D.whisky   = s.whisky   || [];
+      D.food     = s.food     || [];
+      D.wishlist = s.wishlist || [];
+      D.costs    = s.costs    || [];
+      showToastMsg('✓ '+wc+'本のデータを読み込みました');
+      loaded = true;
+      break;
+    }catch(e){
+      console.warn('fetch failed for '+url+':', e.message);
+      continue;
+    }
+  }
+  if(!loaded){
+    showToastMsg('⚠️ data.jsonが見つかりません。GitHubにdata.jsonをアップしてください。');
   }
   renderAll();
   updateExportBtn();
