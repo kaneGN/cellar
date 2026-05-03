@@ -565,25 +565,33 @@ async function load(){
   updateExportBtn();
 }
 
-// 保存 = data.jsonとしてダウンロード（localStorageは使わない）
+// 保存 = メモリ上に保持するだけ（自動ダウンロードしない）
 function save(){
+  showToastMsg('✓ 保存しました。公開するには「GitHubに公開」を押してください。');
+  updateExportBtn();
+}
+
+// GitHubに公開 = data.jsonをダウンロード（手動で押したときだけ）
+function exportData(){
+  const wc = D.whisky.length, fc = D.food.length;
+  if(wc === 0 && fc === 0){
+    alert('データがありません。先にウイスキーまたは料理を追加してください。');
+    return;
+  }
   const exportObj = {
     whisky:   D.whisky,
     food:     D.food,
     wishlist: D.wishlist,
     costs:    D.costs
   };
-  const blob = new Blob([JSON.stringify(exportObj)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify(exportObj)], {type:'application/json'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'data.json';
   a.click();
   URL.revokeObjectURL(a.href);
   showToastMsg('✓ data.json をダウンロードしました。GitHubにアップしてください。');
-  updateExportBtn();
 }
-
-function exportData(){ save(); }
 
 function updateExportBtn(){
   const btn=document.getElementById('export-btn');
@@ -777,7 +785,7 @@ function saveW(){
   const opened=document.getElementById('w-opened').value;
   const totalCost=cost*bottles;
   const fields={name,distillery:document.getElementById('w-dist').value,region,scotland,type:document.getElementById('w-type').value,age:document.getElementById('w-age').value,abv:document.getElementById('w-abv').value,cost,price,bottles,opened,status:document.getElementById('w-stat').value,rating:ratings.w,notes:chips('w-chips'),memo:document.getElementById('w-memo').value,img: (typeof imgData.w === 'string') ? imgData.w : null,
-    imgbbUrl: ''};
+    imgbbUrl: (typeof imgData.w === 'string' && imgData.w.startsWith('http')) ? imgData.w : ''};
   if(editId.w){
     // 更新
     const idx=D.whisky.findIndex(i=>i.id===editId.w);
@@ -802,7 +810,7 @@ function saveF(){
   const name=document.getElementById('f-name').value.trim();if(!name){alert('料理名を入力してください');return;}
   const price=parseInt(document.getElementById('f-price').value)||0;
   const fields={name,category:document.getElementById('f-cat').value,price,pairing:document.getElementById('f-pair').value,rating:ratings.f,memo:document.getElementById('f-memo').value,img: (typeof imgData.f === 'string') ? imgData.f : null,
-    imgbbUrl: ''};
+    imgbbUrl: (typeof imgData.f === 'string' && imgData.f.startsWith('http')) ? imgData.f : ''};
   if(editId.f){
     const idx=D.food.findIndex(i=>i.id===editId.f);
     if(idx>=0)Object.assign(D.food[idx],fields);
@@ -888,7 +896,7 @@ function renderW(){
   const g=document.getElementById('w-grid');
   if(!items.length){g.innerHTML='<div class="empty-state"><div class="empty-icon">🥃</div><p>まだウイスキーが記録されていません</p></div>';return;}
   g.innerHTML=items.map(w=>`<div class="entry-card" onclick="showDet('whisky',${w.id})">
-    ${w.img?`<div class="card-thumb"><img src="${w.img}" alt="${w.name}"></div>`:'<div class="card-thumb">🥃</div>'}
+    ${(w.imgbbUrl||w.img)?`<div class="card-thumb"><img src="${w.imgbbUrl||w.img}" alt="${w.name}"></div>`:'<div class="card-thumb">🥃</div>'}
     <div class="card-body"><div class="card-cat">${w.region||'産地不明'}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
     <div class="card-title">${w.name}</div>${w.distillery?`<div class="card-sub">${w.distillery}</div>`:''}
     <div class="stars">${starsHtml(w.rating)}</div>
@@ -909,7 +917,7 @@ function renderF(){
   const g=document.getElementById('f-grid');
   if(!items.length){g.innerHTML='<div class="empty-state"><div class="empty-icon">🍽</div><p>まだ料理が記録されていません</p></div>';return;}
   g.innerHTML=items.map(f=>`<div class="entry-card" onclick="showDet('food',${f.id})">
-    ${f.img?`<div class="card-thumb"><img src="${f.img}" alt="${f.name}"></div>`:'<div class="card-thumb">🍽</div>'}
+    ${(f.imgbbUrl||f.img)?`<div class="card-thumb"><img src="${f.imgbbUrl||f.img}" alt="${f.name}"></div>`:'<div class="card-thumb">🍽</div>'}
     <div class="card-body"><div class="card-cat">${f.category}</div><div class="card-title">${f.name}</div>
     ${f.pairing?`<div class="card-sub">🥃 ${f.pairing}</div>`:''}
     <div class="stars">${starsHtml(f.rating)}</div>${f.memo?`<div class="card-note">${nl2br(f.memo)}</div>`:''}
@@ -959,7 +967,7 @@ function showDet(type,id){
   const item=D[type].find(i=>i.id===id);if(!item)return;
   let html='';
   if(type==='whisky'){
-    html=`${item.img?`<img class="det-img" src="${item.img}" alt="${item.name}">`:'<div class="det-img-ph">🥃</div>'}
+    html=`${(item.imgbbUrl||item.img)?`<img class="det-img" src="${item.imgbbUrl||item.img}" alt="${item.name}">`:'<div class="det-img-ph">🥃</div>'}
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">
         <div><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">${item.region||'産地不明'}</div>
         <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream)">${item.name}</div>
@@ -981,7 +989,7 @@ function showDet(type,id){
         <button class="btn btn-sm btn-danger" onclick="delItem('whisky',${id},event)">削除</button>
       </div>`;
   } else {
-    html=`${item.img?`<img class="det-img" src="${item.img}" alt="${item.name}">`:'<div class="det-img-ph">🍽</div>'}
+    html=`${(item.imgbbUrl||item.img)?`<img class="det-img" src="${item.imgbbUrl||item.img}" alt="${item.name}">`:'<div class="det-img-ph">🍽</div>'}
       <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">${item.category}</div>
       <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream);margin-bottom:4px">${item.name}</div>
       <div class="stars" style="margin-bottom:14px">${starsHtml(item.rating)}</div>
