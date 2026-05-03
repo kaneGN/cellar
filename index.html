@@ -264,7 +264,7 @@ function renderW(){
   if(!items.length){g.innerHTML='<div class="empty"><div class="empty-icon">\uD83E\uDD43</div><p>該当するウイスキーが見つかりません</p></div>';return;}
   g.innerHTML='<div class="grid">'+items.map(w=>`
     <div class="card" onclick="showW(${w.id})">
-      <div class="card-thumb">${w.img?`<img src="${w.img}" alt="${w.name}"><div class="card-thumb-ov"></div>`:'\uD83E\uDD43'}</div>
+      <div class="card-thumb">${(w.imgbbUrl||w.img)?`<img src="${w.imgbbUrl||w.img}" alt="${w.name}"><div class="card-thumb-ov"></div>`:'\uD83E\uDD43'}</div>
       <div class="card-body">
         <div class="card-cat">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' · '+w.type:''}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
         <div class="card-name">${w.name}</div>
@@ -292,7 +292,7 @@ function renderF(){
   if(!items.length){g.innerHTML='<div class="empty"><div class="empty-icon">\uD83C\uDF7D</div><p>該当する料理が見つかりません</p></div>';return;}
   g.innerHTML='<div class="grid">'+items.map(f=>`
     <div class="card" onclick="showF(${f.id})">
-      <div class="card-thumb">${f.img?`<img src="${f.img}" alt="${f.name}"><div class="card-thumb-ov"></div>`:'\uD83C\uDF7D'}</div>
+      <div class="card-thumb">${(f.imgbbUrl||f.img)?`<img src="${f.imgbbUrl||f.img}" alt="${f.name}"><div class="card-thumb-ov"></div>`:'\uD83C\uDF7D'}</div>
       <div class="card-body">
         <div class="card-cat">${f.category}</div>
         <div class="card-name">${f.name}</div>
@@ -305,7 +305,7 @@ function renderF(){
 }
 function showW(id){
   const w=D.whisky.find(i=>i.id===id);if(!w)return;
-  document.getElementById('det-img-wrap').innerHTML=w.img?`<img class="modal-img" src="${w.img}" alt="${w.name}">`:'<div class="modal-img-ph">\uD83E\uDD43</div>';
+  document.getElementById('det-img-wrap').innerHTML=(w.imgbbUrl||w.img)?`<img class="modal-img" src="${w.imgbbUrl||w.img}" alt="${w.name}">`:'<div class="modal-img-ph">\uD83E\uDD43</div>';
   document.getElementById('det-body').innerHTML=`
     <div class="modal-region">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' — '+w.type:''}</div>
     <div class="modal-name">${w.name}</div>
@@ -324,7 +324,7 @@ function showW(id){
 }
 function showF(id){
   const f=D.food.find(i=>i.id===id);if(!f)return;
-  document.getElementById('det-img-wrap').innerHTML=f.img?`<img class="modal-img" src="${f.img}" alt="${f.name}">`:'<div class="modal-img-ph">\uD83C\uDF7D</div>';
+  document.getElementById('det-img-wrap').innerHTML=(f.imgbbUrl||f.img)?`<img class="modal-img" src="${f.imgbbUrl||f.img}" alt="${f.name}">`:'<div class="modal-img-ph">\uD83C\uDF7D</div>';
   document.getElementById('det-body').innerHTML=`
     <div class="modal-region">${f.category}</div>
     <div class="modal-name">${f.name}</div>
