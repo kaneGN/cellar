@@ -112,6 +112,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="nav-logo">The Cellar</div>
     <button class="nav-tab active" onclick="switchTab('whisky')">🥃 ウイスキー</button>
     <button class="nav-tab" onclick="switchTab('food')">🍽 フード</button>
+    <button class="nav-tab" onclick="switchTab('other')">🍸 その他</button>
   </div>
 </nav>
 <div class="wrap">
@@ -183,6 +184,33 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <div class="result-count" id="f-count"></div>
     <div id="f-grid"><div class="loading"><div class="loading-icon">🍽</div><p>メニューを読み込んでいます...</p></div></div>
   </div>
+
+  <div class="section" id="sec-other">
+    <div class="sec-hd">
+      <div class="sec-hd-label">Other Spirits</div>
+      <div class="sec-hd-title">その他の <em>お酒</em></div>
+      <div class="sec-hd-line"></div>
+    </div>
+    <div class="search-bar">
+      <input class="search-input" type="search" id="o-search" placeholder="名前で検索..." oninput="renderO()">
+      <select class="filter-select" id="o-type" onchange="renderO()">
+        <option value="">すべての種類</option>
+        <option>ジン</option><option>ウォッカ</option><option>テキーラ</option>
+        <option>ラム</option><option>ブランデー</option><option>コニャック</option>
+        <option>リキュール</option><option>ビール</option><option>ワイン</option>
+        <option>シャンパン</option><option>梅酒</option><option>焼酎</option>
+        <option>日本酒</option><option>その他</option>
+      </select>
+      <select class="filter-select" id="o-stock" onchange="renderO()">
+        <option value="">在庫：すべて</option>
+        <option value="in">在庫あり</option>
+        <option value="out">在庫なし</option>
+      </select>
+    </div>
+    <div class="result-count" id="o-count"></div>
+    <div id="o-grid"></div>
+  </div>
+
 </div>
 <div class="modal-bg" id="m-det">
 <div class="modal">
@@ -192,7 +220,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 </div>
 <script>
-let D={whisky:[],food:[]};
+let D={whisky:[],food:[],other:[]};
 async function load(){
   try{
     // data.jsonをGitHub Pagesから取得（キャッシュ無効化）
@@ -201,15 +229,16 @@ async function load(){
     const data = await res.json();
     D.whisky = data.whisky || [];
     D.food   = data.food   || [];
+    D.other  = data.other  || [];
   }catch(e){
     D.whisky = [];
     D.food   = [];
     console.warn('data.json load failed:', e);
   }
-  renderW();renderF();
+  renderW();renderF();renderO();
 }
 function switchTab(name){
-  document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',['whisky','food'][i]===name));
+  document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',['whisky','food','other'][i]===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+name).classList.add('active');
   window.scrollTo({top:0,behavior:'smooth'});
@@ -303,6 +332,54 @@ function renderF(){
       ${f.price?`<div class="card-foot"><span style="font-size:12px;color:var(--text-light)">Price</span><span class="card-price">&yen;${f.price.toLocaleString()}</span></div>`:''}
     </div>`).join('')+'</div>';
 }
+function renderO(){
+  const q=document.getElementById('o-search').value.toLowerCase();
+  const type=document.getElementById('o-type').value;
+  const st=document.getElementById('o-stock').value;
+  const items=D.other.filter(o=>{
+    if(q&&!o.name.toLowerCase().includes(q)&&!(o.brand||'').toLowerCase().includes(q))return false;
+    if(type&&o.type!==type)return false;
+    if(st&&(o.status||'in')!==st)return false;
+    return true;
+  });
+  document.getElementById('o-count').textContent=items.length?items.length+'品目':'';
+  const g=document.getElementById('o-grid');
+  if(!items.length){g.innerHTML='<div class="empty"><div class="empty-icon">🍸</div><p>該当するお酒が見つかりません</p></div>';return;}
+  g.innerHTML='<div class="grid">'+items.map(o=>`
+    <div class="card" onclick="showO(${o.id})">
+      <div class="card-thumb">${(o.imgbbUrl||o.img)?`<img src="${o.imgbbUrl||o.img}" alt="${o.name}"><div class="card-thumb-ov"></div>`:'🍸'}</div>
+      <div class="card-body">
+        <div class="card-cat">${o.type||'種類不明'}${o.abv?' · '+o.abv:''}</div>
+        <div class="card-name">${o.name}</div>
+        ${o.brand?`<div class="card-meta">${o.brand}</div>`:''}
+        <div class="stars">${starsHtml(o.rating)}</div>
+        ${o.memo?`<div class="card-note">${o.memo}</div>`:''}
+      </div>
+      <div class="card-foot">
+        <span class="${(o.status||'in')==='in'?'st-in':'st-out'}">${(o.status||'in')==='in'?'在庫あり':'在庫なし'}</span>
+        ${o.price?`<span class="card-price">&yen;${o.price.toLocaleString()}<span style="font-size:11px;font-family:'Crimson Pro',serif;color:var(--text-light)"> / 杯</span></span>`:''}
+      </div>
+    </div>`).join('')+'</div>';
+}
+
+function showO(id){
+  const o=D.other.find(i=>i.id===id);if(!o)return;
+  document.getElementById('det-img-wrap').innerHTML=(o.imgbbUrl||o.img)?`<img class="modal-img" src="${o.imgbbUrl||o.img}" alt="${o.name}">`:'<div class="modal-img-ph">🍸</div>';
+  document.getElementById('det-body').innerHTML=`
+    <div class="modal-region">${o.type||'種類不明'}</div>
+    <div class="modal-name">${o.name}</div>
+    ${o.brand?`<div class="modal-dist">${o.brand}</div>`:''}
+    <div class="stars">${starsHtml(o.rating)}</div>
+    <div class="modal-meta-grid">
+      ${o.abv?`<div class="meta-cell"><div class="meta-lbl">度数</div><div class="meta-val">${o.abv}</div></div>`:''}
+      ${o.price?`<div class="meta-cell"><div class="meta-lbl">1 杯</div><div class="meta-val">&yen;${o.price.toLocaleString()}</div></div>`:''}
+      <div class="meta-cell"><div class="meta-lbl">在庫</div><div class="meta-val"><span class="${(o.status||'in')==='in'?'st-in':'st-out'}">${(o.status||'in')==='in'?'あり':'なし'}</span></div></div>
+      ${o.opened?`<div class="meta-cell"><div class="meta-lbl">開封日</div><div class="meta-val">${o.opened}</div></div>`:''}
+    </div>
+    ${o.memo?`<div class="modal-note">${o.memo}</div>`:''}`;
+  document.getElementById('m-det').classList.add('open');
+}
+
 function showW(id){
   const w=D.whisky.find(i=>i.id===id);if(!w)return;
   document.getElementById('det-img-wrap').innerHTML=(w.imgbbUrl||w.img)?`<img class="modal-img" src="${w.imgbbUrl||w.img}" alt="${w.name}">`:'<div class="modal-img-ph">\uD83E\uDD43</div>';
