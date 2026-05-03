@@ -220,6 +220,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   <div class="stats-row">
     <div class="stat-card"><div class="stat-num" id="s-w">0</div><div class="stat-lbl">Whiskies</div></div>
     <div class="stat-card"><div class="stat-num" id="s-f">0</div><div class="stat-lbl">Dishes</div></div>
+    <div class="stat-card"><div class="stat-num" id="s-o">0</div><div class="stat-lbl">Others</div></div>
     <div class="stat-card"><div class="stat-num" id="s-wl">0</div><div class="stat-lbl">Wishlist</div></div>
     <div class="stat-card"><div class="stat-num" id="s-c">¥0</div><div class="stat-lbl">Total Cost</div></div>
   </div>
@@ -228,6 +229,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
     <button class="nav-tab active" onclick="tab('whisky')">🥃 ウイスキー</button>
     <button class="nav-tab" onclick="tab('food')">🍽 料理</button>
     <button class="nav-tab" onclick="tab('wishlist')">📋 ウィッシュリスト</button>
+    <button class="nav-tab" onclick="tab('other')">🍸 その他</button>
     <button class="nav-tab" onclick="tab('costs')">💰 コスト管理</button>
   </div>
 
@@ -298,6 +300,46 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <button class="btn btn-primary" onclick="openWL()">+ 追加</button>
     </div>
     <div id="wl-list"></div>
+  </div>
+
+
+  <!-- OTHER -->
+  <div class="section" id="sec-other">
+    <div class="toolbar">
+      <input class="tb-input tb-search" type="search" placeholder="名前を検索..." id="os" oninput="renderO()">
+      <select class="tb-select" id="otype" onchange="renderO()">
+        <option value="">すべての種類</option>
+        <option>ジン</option>
+        <option>ウォッカ</option>
+        <option>テキーラ</option>
+        <option>ラム</option>
+        <option>ブランデー</option>
+        <option>コニャック</option>
+        <option>リキュール</option>
+        <option>ビール</option>
+        <option>ワイン</option>
+        <option>シャンパン</option>
+        <option>梅酒</option>
+        <option>焼酎</option>
+        <option>日本酒</option>
+        <option>その他</option>
+      </select>
+      <select class="tb-select" id="ost" onchange="renderO()">
+        <option value="">在庫：すべて</option>
+        <option value="in">在庫あり</option>
+        <option value="out">在庫なし</option>
+      </select>
+      <select class="tb-select" id="o-sort" onchange="renderO()">
+        <option value="date-desc">登録日（新しい順）</option>
+        <option value="date-asc">登録日（古い順）</option>
+        <option value="name-asc">名前（A→Z）</option>
+        <option value="name-desc">名前（Z→A）</option>
+        <option value="rating-desc">評価（高い順）</option>
+        <option value="cost-desc">仕入れ金額（高い順）</option>
+      </select>
+      <button class="btn btn-primary" onclick="openO()">+ 追加</button>
+    </div>
+    <div class="grid" id="o-grid"></div>
   </div>
 
   <!-- COSTS -->
@@ -477,6 +519,64 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 </div>
 </div>
 
+
+<!-- Other Modal -->
+<div class="modal-bg" id="m-o">
+<div class="modal">
+  <button class="modal-close" onclick="cm('m-o')">✕</button>
+  <div class="modal-title" id="m-o-title">その他のお酒を記録する</div>
+  <div class="modal-sub">ジン、ウォッカ、テキーラなど</div>
+  <div class="fl"><label>名前 *</label><input class="fi" id="o-name" placeholder="例：タンカレー No.10"></div>
+  <div class="g2">
+    <div class="fl"><label>ブランド・蒸留所</label><input class="fi" id="o-brand" placeholder="例：タンカレー"></div>
+    <div class="fl"><label>種類</label>
+      <select class="fs" id="o-type">
+        <option value="">選択してください</option>
+        <option>ジン</option><option>ウォッカ</option><option>テキーラ</option>
+        <option>ラム</option><option>ブランデー</option><option>コニャック</option>
+        <option>リキュール</option><option>ビール</option><option>ワイン</option>
+        <option>シャンパン</option><option>梅酒</option><option>焼酎</option>
+        <option>日本酒</option><option>その他</option>
+      </select>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="fl"><label>在庫</label>
+      <select class="fs" id="o-stat">
+        <option value="in">あり</option>
+        <option value="out">なし</option>
+      </select>
+    </div>
+    <div class="fl"><label>本数</label><input class="fi" type="number" id="o-bottles" placeholder="1" min="1"></div>
+    <div class="fl"><label>度数</label><input class="fi" id="o-abv" placeholder="例：47.3%"></div>
+  </div>
+  <div class="g2">
+    <div class="fl"><label>仕入れ金額（¥）</label><input class="fi" type="number" id="o-cost" placeholder="0"></div>
+    <div class="fl"><label>販売金額・1杯（¥）</label><input class="fi" type="number" id="o-price" placeholder="0"></div>
+  </div>
+  <div class="fl"><label>開封日</label><input class="fi" type="date" id="o-opened"></div>
+  <div class="fl"><label>評価</label>
+    <div class="r-stars" id="or-stars">
+      <span class="r-star" onclick="rate('o',1)">★</span><span class="r-star" onclick="rate('o',2)">★</span>
+      <span class="r-star" onclick="rate('o',3)">★</span><span class="r-star" onclick="rate('o',4)">★</span>
+      <span class="r-star" onclick="rate('o',5)">★</span>
+    </div>
+  </div>
+  <div class="fl"><label>メモ</label><textarea class="ft" id="o-memo" placeholder="味わい、特徴など..."></textarea></div>
+  <div class="fl"><label>写真</label>
+    <div class="upload-wrap">
+      <input type="file" accept="image/*" onchange="prevImg(this,'o-prev','o')">
+      <div class="u-icon">📷</div><div class="u-txt">クリックして画像を追加</div>
+      <img class="img-prev" id="o-prev" style="display:none">
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+    <button class="btn btn-ghost" onclick="cm('m-o')">キャンセル</button>
+    <button class="btn btn-primary" id="m-o-save" onclick="saveO()">保存する</button>
+  </div>
+</div>
+</div>
+
 <div class="modal-bg" id="m-c">
 <div class="modal">
   <button class="modal-close" onclick="cm('m-c')">✕</button>
@@ -512,9 +612,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 const ADMIN_PW = 'cellar2025';
 const IMGBB_KEY = '01fea6a54e3c306148503bd65406ff30';
 
-let D = {whisky:[],food:[],wishlist:[],costs:[]};
-let ratings={w:0,f:0}, imgData={w:null,f:null}, toastTimer;
-let editId = {w:null, f:null, wl:null, c:null};
+let D = {whisky:[],food:[],other:[],wishlist:[],costs:[]};
+let ratings={w:0,f:0,o:0}, imgData={w:null,f:null,o:null}, toastTimer;
+let editId = {w:null, f:null, o:null, wl:null, c:null};
 
 function doLogin(){
   if(document.getElementById('pw-input').value===ADMIN_PW){
@@ -548,6 +648,7 @@ async function load(){
       if(wc === 0 && (s.food||[]).length === 0) continue;
       D.whisky   = s.whisky   || [];
       D.food     = s.food     || [];
+      D.other    = s.other    || [];
       D.wishlist = s.wishlist || [];
       D.costs    = s.costs    || [];
       showToastMsg('✓ '+wc+'本のデータを読み込みました');
@@ -581,6 +682,7 @@ function exportData(){
   const exportObj = {
     whisky:   D.whisky,
     food:     D.food,
+    other:    D.other,
     wishlist: D.wishlist,
     costs:    D.costs
   };
@@ -632,6 +734,151 @@ async function convertAllBase64ToImgBB(){
   showToastMsg('✓ 完了: ' + success + '本成功' + (fail > 0 ? ' / ' + fail + '本失敗' : '') + ' → 「GitHubに公開」を押してください');
 }
 
+
+// ── その他のお酒 ──
+function openO(id){
+  editId.o = id||null;
+  const item = id ? D.other.find(i=>i.id===id) : null;
+  document.getElementById('m-o-title').textContent = item ? 'その他のお酒を編集する' : 'その他のお酒を記録する';
+  document.getElementById('m-o-save').textContent = item ? '更新する' : '保存する';
+  document.getElementById('o-name').value   = item ? (item.name||'') : '';
+  document.getElementById('o-brand').value  = item ? (item.brand||'') : '';
+  document.getElementById('o-type').value   = item ? (item.type||'') : '';
+  document.getElementById('o-abv').value    = item ? (item.abv||'') : '';
+  document.getElementById('o-cost').value   = item ? (item.cost||'') : '';
+  document.getElementById('o-price').value  = item ? (item.price||'') : '';
+  document.getElementById('o-bottles').value= item ? (item.bottles||1) : 1;
+  document.getElementById('o-opened').value = item ? (item.opened||'') : '';
+  document.getElementById('o-stat').value   = item ? (item.status||'in') : 'in';
+  document.getElementById('o-memo').value   = item ? (item.memo||'') : '';
+  const prev = document.getElementById('o-prev');
+  const oSrc = item ? (item.imgbbUrl||item.img||null) : null;
+  if(oSrc){prev.src=oSrc;prev.style.display='block';imgData.o=oSrc;}
+  else{prev.style.display='none';imgData.o=null;}
+  const r=item?(item.rating||0):0;
+  ratings.o=r;
+  document.querySelectorAll('#or-stars .r-star').forEach((s,i)=>s.classList.toggle('on',i<r));
+  om('m-o');
+}
+
+function saveO(){
+  const name=document.getElementById('o-name').value.trim();
+  if(!name){alert('名前を入力してください');return;}
+  const cost=parseInt(document.getElementById('o-cost').value)||0;
+  const price=parseInt(document.getElementById('o-price').value)||0;
+  const bottles=parseInt(document.getElementById('o-bottles').value)||1;
+  const totalCost=cost*bottles;
+  const today=new Date().toLocaleDateString('ja-JP');
+  const fields={
+    name, brand:document.getElementById('o-brand').value,
+    type:document.getElementById('o-type').value,
+    abv:document.getElementById('o-abv').value,
+    cost, price, bottles,
+    opened:document.getElementById('o-opened').value,
+    status:document.getElementById('o-stat').value,
+    rating:ratings.o,
+    memo:document.getElementById('o-memo').value,
+    img:(typeof imgData.o==='string')?imgData.o:null,
+    imgbbUrl:(typeof imgData.o==='string'&&imgData.o.startsWith('http'))?imgData.o:''
+  };
+  if(editId.o){
+    const idx=D.other.findIndex(i=>i.id===editId.o);
+    if(idx>=0){Object.assign(D.other[idx],fields);}
+    // コスト更新
+    const ci=D.costs.findIndex(c=>c.id===editId.o+1&&c.auto);
+    const cname=name+(bottles>1?' × '+bottles+'本':'');
+    if(totalCost>0){
+      const cdate=D.other[D.other.findIndex(i=>i.id===editId.o)].date;
+      if(ci>=0){D.costs[ci].amount=totalCost;D.costs[ci].name=cname;}
+      else{D.costs.push({id:editId.o+1,name:cname,category:'その他仕入れ',amount:totalCost,date:cdate,auto:true});}
+    } else if(ci>=0){D.costs.splice(ci,1);}
+  } else {
+    const id=Date.now();
+    D.other.push({id,...fields,date:today});
+    if(totalCost>0)D.costs.push({id:id+1,name:name+(bottles>1?' × '+bottles+'本':''),category:'その他仕入れ',amount:totalCost,date:today,auto:true});
+  }
+  save();renderAll();cm('m-o');
+}
+
+function renderO(){
+  const q=document.getElementById('os').value.toLowerCase();
+  const type=document.getElementById('otype').value;
+  const st=document.getElementById('ost').value;
+  const sortKey=document.getElementById('o-sort').value;
+  let items=D.other.filter(o=>{
+    if(q&&!o.name.toLowerCase().includes(q)&&!(o.brand||'').toLowerCase().includes(q))return false;
+    if(type&&o.type!==type)return false;
+    if(st&&(o.status||'in')!==st)return false;
+    return true;
+  });
+  items.sort((a,b)=>{
+    switch(sortKey){
+      case 'date-asc':  return (a.date||'').localeCompare(b.date||'');
+      case 'date-desc': return (b.date||'').localeCompare(a.date||'');
+      case 'name-asc':  return (a.name||'').localeCompare(b.name||'','ja');
+      case 'name-desc': return (b.name||'').localeCompare(a.name||'','ja');
+      case 'rating-desc': return (b.rating||0)-(a.rating||0);
+      case 'cost-desc': return (b.cost||0)-(a.cost||0);
+      default: return 0;
+    }
+  });
+  const g=document.getElementById('o-grid');
+  if(!items.length){
+    g.innerHTML='<div class="empty-state"><div class="empty-icon">🍸</div><p>まだその他のお酒が登録されていません</p></div>';
+    return;
+  }
+  g.innerHTML=items.map(o=>`
+    <div class="entry-card" onclick="showDetO(${o.id})">
+      ${(o.imgbbUrl||o.img)?`<div class="card-thumb"><img src="${o.imgbbUrl||o.img}" alt="${o.name}"></div>`:'<div class="card-thumb">🍸</div>'}
+      <div class="card-body">
+        <div class="card-cat">${o.type||'種類不明'}${o.abv?' · '+o.abv:''}</div>
+        <div class="card-title">${o.name}</div>
+        ${o.brand?`<div class="card-sub">${o.brand}</div>`:''}
+        <div class="stars">${starsHtml(o.rating)}</div>
+        ${o.memo?`<div class="card-note">${nl2br(o.memo)}</div>`:''}
+      </div>
+      <div class="card-footer">
+        <span class="card-date">${o.date}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          ${o.bottles&&o.bottles>1?`<span style="font-size:11px;color:var(--text-light)">${o.bottles}本</span>`:''}
+          <span class="status-badge ${(o.status||'in')==='in'?'st-in':'st-out'}">${(o.status||'in')==='in'?'在庫あり':'在庫なし'}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function showDetO(id){
+  const o=D.other.find(i=>i.id===id);if(!o)return;
+  document.getElementById('det-body').innerHTML=`
+    ${(o.imgbbUrl||o.img)?`<img class="det-img" src="${o.imgbbUrl||o.img}" alt="${o.name}">`:'<div class="det-img-ph">🍸</div>'}
+    <div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--amber);margin-bottom:4px">${o.type||'種類不明'}</div>
+    <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cream)">${o.name}</div>
+    ${o.brand?`<div style="font-size:13px;color:var(--text-light)">${o.brand}</div>`:''}
+    <div class="stars" style="margin-bottom:14px">${starsHtml(o.rating)}</div>
+    <div class="det-meta">
+      ${o.abv?`<div class="det-mi"><div class="det-ml">度数</div><div class="det-mv">${o.abv}</div></div>`:''}
+      ${o.bottles?`<div class="det-mi"><div class="det-ml">本数</div><div class="det-mv">${o.bottles}本</div></div>`:''}
+      ${o.cost?`<div class="det-mi"><div class="det-ml">仕入れ金額</div><div class="det-mv">¥${o.cost.toLocaleString()}${o.bottles>1?' × '+o.bottles+'本 = ¥'+(o.cost*o.bottles).toLocaleString():''}</div></div>`:''}
+      ${o.price?`<div class="det-mi"><div class="det-ml">販売価格(1杯)</div><div class="det-mv">¥${o.price.toLocaleString()}</div></div>`:''}
+      ${o.opened?`<div class="det-mi"><div class="det-ml">開封日</div><div class="det-mv">${o.opened}</div></div>`:''}
+      <div class="det-mi"><div class="det-ml">在庫</div><div class="det-mv"><span class="status-badge ${(o.status||'in')==='in'?'st-in':'st-out'}">${(o.status||'in')==='in'?'あり':'なし'}</span></div></div>
+    </div>
+    ${o.memo?`<div class="det-note">${nl2br(o.memo)}</div>`:''}
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px">
+      <button class="btn btn-sm btn-ghost" onclick="cm('m-det');openO(${id})">✏️ 編集する</button>
+      <button class="btn btn-sm btn-danger" onclick="delOther(${id},event)">削除</button>
+    </div>`;
+  om('m-det');
+}
+
+function delOther(id,e){
+  if(e)e.stopPropagation();
+  if(!confirm('削除しますか？'))return;
+  D.other=D.other.filter(i=>i.id!==id);
+  D.costs=D.costs.filter(c=>c.id!==id+1);
+  save();renderAll();cm('m-det');
+}
+
 function showToastMsg(msg){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   clearTimeout(toastTimer);toastTimer=setTimeout(()=>{t.classList.remove('show');t.textContent='✓';},4000);
@@ -656,7 +903,7 @@ async function uploadToImgBB(base64data){
 }
 
 function tab(name){
-  const names=['whisky','food','wishlist','costs'];
+  const names=['whisky','food','other','wishlist','costs'];
   document.querySelectorAll('.nav-tab').forEach((el,i)=>el.classList.toggle('active',names[i]===name));
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+name).classList.add('active');
@@ -842,7 +1089,7 @@ function saveC(){
   }
   save();renderAll();cm('m-c');
 }
-function delItem(type,id,e){if(e)e.stopPropagation();if(!confirm('削除しますか？'))return;D[type]=D[type].filter(i=>i.id!==id);if(type==='whisky'||type==='food')D.costs=D.costs.filter(c=>c.id!==id+1);save();renderAll();cm('m-det');}
+function delItem(type,id,e){if(e)e.stopPropagation();if(!confirm('削除しますか？'))return;D[type]=D[type].filter(i=>i.id!==id);if(type==='whisky'||type==='food'||type==='other')D.costs=D.costs.filter(c=>c.id!==id+1);save();renderAll();cm('m-det');}
 function delCost(id,e){e.stopPropagation();if(!confirm('削除しますか？'))return;D.costs=D.costs.filter(c=>c.id!==id);save();renderAll();}
 
 function nl2br(str){
@@ -943,7 +1190,7 @@ function renderC(){
   const total=D.costs.reduce((s,c)=>s+c.amount,0);
   document.getElementById('c-total').textContent='¥'+total.toLocaleString();
   document.getElementById('c-count').textContent=D.costs.length+'点';
-  const whiskyTotal=D.costs.filter(c=>c.auto&&c.category==='ウイスキー仕入れ').reduce((s,c)=>s+c.amount,0);
+  const whiskyTotal=D.costs.filter(c=>c.auto&&(c.category==='ウイスキー仕入れ'||c.category==='その他仕入れ')).reduce((s,c)=>s+c.amount,0);
   const manualTotal=D.costs.filter(c=>!c.auto).reduce((s,c)=>s+c.amount,0);
   document.getElementById('s-c').textContent='¥'+(whiskyTotal+manualTotal).toLocaleString();
   const byC={};D.costs.forEach(c=>{byC[c.category]=(byC[c.category]||0)+c.amount;});
@@ -960,8 +1207,8 @@ function renderC(){
     ${c.auto?'':`<button class="btn btn-sm btn-ghost" onclick="openC(${c.id})" style="padding:4px 8px;font-size:11px">✏️</button><button class="btn btn-sm btn-danger" onclick="delCost(${c.id},event)">削除</button>`}</div></div>`).join('');
 }
 
-function renderStats(){document.getElementById('s-w').textContent=D.whisky.length;document.getElementById('s-f').textContent=D.food.length;document.getElementById('s-wl').textContent=D.wishlist.length;}
-function renderAll(){renderStats();renderW();renderF();renderWL();renderC();}
+function renderStats(){document.getElementById('s-w').textContent=D.whisky.length;document.getElementById('s-f').textContent=D.food.length;document.getElementById('s-o').textContent=D.other.length;document.getElementById('s-wl').textContent=D.wishlist.length;}
+function renderAll(){renderStats();renderW();renderF();renderO();renderWL();renderC();}
 
 function showDet(type,id){
   const item=D[type].find(i=>i.id===id);if(!item)return;
