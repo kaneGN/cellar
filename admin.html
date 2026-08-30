@@ -256,6 +256,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <option value="in">在庫あり</option>
         <option value="out">在庫なし</option>
       </select>
+      <select class="tb-select" id="w-cask" onchange="renderW()">
+        <option value="">すべての樽</option>
+        <option>バーボンオーク</option>
+        <option>シェリー</option>
+        <option>ポートワイン</option>
+        <option>ワイン</option>
+        <option>ミズナラ</option>
+        <option>バージンオーク</option>
+        <option>ラム</option>
+        <option>コニャック</option>
+        <option>IPAビール</option>
+        <option>STR</option>
+        <option>カスクフィニッシュ</option>
+      </select>
       <select class="tb-select" id="w-sort" onchange="renderW()">
         <option value="date-desc">登録日（新しい順）</option>
         <option value="date-asc">登録日（古い順）</option>
@@ -1145,12 +1159,14 @@ function renderW(){
   const sr=document.getElementById('wsr').value;
   const wtype=document.getElementById('wtype').value;
   const st=document.getElementById('wst').value;
+  const cask=document.getElementById('w-cask').value;
   const items=D.whisky.filter(w=>{
     if(q&&!w.name.toLowerCase().includes(q)&&!(w.distillery||'').toLowerCase().includes(q))return false;
     if(reg&&w.region!==reg)return false;
     if(sr&&w.scotland!==sr)return false;
     if(wtype&&w.type!==wtype)return false;
     if(st&&w.status!==st)return false;
+    if(cask&&!(w.barrel||'').toLowerCase().includes(cask.toLowerCase()))return false;
     return true;
   });
   // ソート

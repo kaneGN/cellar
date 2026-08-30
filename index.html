@@ -150,6 +150,20 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <option>フローラル</option><option>ハチミツ</option><option>ウッディー</option>
         <option>シトラス</option><option>ナッツ</option><option>チョコレート</option>
       </select>
+      <select class="filter-select" id="w-cask" onchange="renderW()">
+        <option value="">すべての樽</option>
+        <option>バーボンオーク</option>
+        <option>シェリー</option>
+        <option>ポートワイン</option>
+        <option>ワイン</option>
+        <option>ミズナラ</option>
+        <option>バージンオーク</option>
+        <option>ラム</option>
+        <option>コニャック</option>
+        <option>IPAビール</option>
+        <option>STR</option>
+        <option>カスクフィニッシュ</option>
+      </select>
       <select class="filter-select" id="w-sort" onchange="renderW()">
         <option value="date-desc">登録日（新しい順）</option>
         <option value="date-asc">登録日（古い順）</option>
@@ -268,6 +282,8 @@ function renderW(){
     if(wtype&&w.type!==wtype)return false;
     if(note&&(!w.notes||!w.notes.includes(note)))return false;
     if(stockFilter&&(w.status||'in')!==stockFilter)return false;
+    const cask=document.getElementById('w-cask').value;
+    if(cask&&!(w.barrel||'').toLowerCase().includes(cask.toLowerCase()))return false;
     return true;
   });
   // ソート
