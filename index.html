@@ -296,6 +296,7 @@ function renderW(){
       <div class="card-thumb">${(w.imgbbUrl||w.img)?`<img src="${w.imgbbUrl||w.img}" alt="${w.name}"><div class="card-thumb-ov"></div>`:'\uD83E\uDD43'}</div>
       <div class="card-body">
         <div class="card-cat">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' · '+w.type:''}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
+        ${w.barrel?`<div style="font-size:11px;color:var(--text-light);margin-top:2px">🪵 ${w.barrel}</div>`:''}
         <div class="card-name">${w.name}</div>
         ${w.distillery?`<div class="card-meta">${w.distillery}</div>`:''}
         <div class="stars">${starsHtml(w.rating)}</div>

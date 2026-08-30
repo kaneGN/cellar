@@ -398,7 +398,7 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
   </div>
   <div class="g2">
     <div class="fl"><label>度数</label><input class="fi" id="w-abv" placeholder="43%"></div>
-    <div class="fl"></div>
+    <div class="fl"><label>樽の種類</label><input class="fi" id="w-barrel" placeholder="例：バーボンオーク、シェリー樽"></div>
   </div>
   <div class="g2">
     <div class="fl"><label>仕入れ金額（¥）</label><input class="fi" type="number" id="w-cost" placeholder="0" style="border-color:rgba(200,135,58,0.5)"></div>
@@ -630,11 +630,21 @@ document.getElementById('pw-input').addEventListener('keydown',e=>{if(e.key==='E
 // 毎回GitHubのdata.jsonから読み込む（localStorageは使わない）
 async function load(){
   showToastMsg('📡 データを読み込み中...');
-  // 複数のURLを順に試みる
+
+  // localStorageからコスト・ウィッシュリストを先に復元
+  try{
+    const raw = localStorage.getItem('cellar-local');
+    if(raw){
+      const local = JSON.parse(raw);
+      D.wishlist = local.wishlist || [];
+      D.costs    = local.costs    || [];
+    }
+  }catch(e){}
+
+  // GitHubのdata.jsonからウイスキー・料理・その他を読む
   const urls = [
     './data.json?t='+Date.now(),
-    'https://kanegn.github.io/cellar/data.json?t='+Date.now(),
-    '/cellar/data.json?t='+Date.now()
+    'https://kanegn.github.io/cellar/data.json?t='+Date.now()
   ];
   let loaded = false;
   for(const url of urls){
@@ -642,32 +652,33 @@ async function load(){
       const res = await fetch(url);
       if(!res.ok) continue;
       const text = await res.text();
-      if(!text || text.trim() === '') continue;
+      if(!text||text.trim()==='') continue;
       const s = JSON.parse(text);
       const wc = (s.whisky||[]).length;
-      if(wc === 0 && (s.food||[]).length === 0) continue;
-      D.whisky   = s.whisky   || [];
-      D.food     = s.food     || [];
-      D.other    = s.other    || [];
-      D.wishlist = s.wishlist || [];
-      D.costs    = s.costs    || [];
-      showToastMsg('✓ '+wc+'本のデータを読み込みました');
+      if(wc===0&&(s.food||[]).length===0&&(s.other||[]).length===0) continue;
+      D.whisky = s.whisky || [];
+      D.food   = s.food   || [];
+      D.other  = s.other  || [];
       loaded = true;
+      showToastMsg('✓ '+wc+'本のデータを読み込みました');
       break;
-    }catch(e){
-      console.warn('fetch failed for '+url+':', e.message);
-      continue;
-    }
+    }catch(e){ console.warn('fetch failed:',e.message); }
   }
-  if(!loaded){
-    showToastMsg('⚠️ data.jsonが見つかりません。GitHubにdata.jsonをアップしてください。');
-  }
+  if(!loaded) showToastMsg('⚠️ data.jsonが見つかりません');
   renderAll();
   updateExportBtn();
 }
-
 // 保存 = メモリ上に保持するだけ（自動ダウンロードしない）
 function save(){
+  try{
+    localStorage.setItem('cellar-local', JSON.stringify({
+      whisky:   D.whisky.map(w=>({...w,img:null})),
+      food:     D.food.map(f=>({...f,img:null})),
+      other:    D.other.map(o=>({...o,img:null})),
+      wishlist: D.wishlist,
+      costs:    D.costs
+    }));
+  }catch(e){ console.warn('save error:',e); }
   showToastMsg('✓ 保存しました。公開するには「GitHubに公開」を押してください。');
   updateExportBtn();
 }
@@ -962,7 +973,8 @@ function openW(id){
   document.getElementById('w-price').value = item ? (item.price||'') : '';
   document.getElementById('w-cost').value  = item ? (item.cost||'') : '';
   document.getElementById('w-reg').value   = item ? (item.region||'') : '';
-  document.getElementById('w-type').value  = item ? (item.type||'') : '';
+  document.getElementById('w-type').value   = item ? (item.type||'') : '';
+  document.getElementById('w-barrel').value = item ? (item.barrel||'') : '';
   const scot = item ? (item.scotland||'') : '';
   document.getElementById('w-scotland').value = scot;
   document.getElementById('w-scotland-row').style.display = (item&&item.region==='スコットランド') ? 'block' : 'none';
@@ -1031,7 +1043,7 @@ function saveW(){
   const bottles=parseInt(document.getElementById('w-bottles').value)||1;
   const opened=document.getElementById('w-opened').value;
   const totalCost=cost*bottles;
-  const fields={name,distillery:document.getElementById('w-dist').value,region,scotland,type:document.getElementById('w-type').value,age:document.getElementById('w-age').value,abv:document.getElementById('w-abv').value,cost,price,bottles,opened,status:document.getElementById('w-stat').value,rating:ratings.w,notes:chips('w-chips'),memo:document.getElementById('w-memo').value,img: (typeof imgData.w === 'string') ? imgData.w : null,
+  const fields={name,distillery:document.getElementById('w-dist').value,region,scotland,type:document.getElementById('w-type').value,barrel:document.getElementById('w-barrel').value,age:document.getElementById('w-age').value,abv:document.getElementById('w-abv').value,cost,price,bottles,opened,status:document.getElementById('w-stat').value,rating:ratings.w,notes:chips('w-chips'),memo:document.getElementById('w-memo').value,img: (typeof imgData.w === 'string') ? imgData.w : null,
     imgbbUrl: (typeof imgData.w === 'string' && imgData.w.startsWith('http')) ? imgData.w : ''};
   if(editId.w){
     // 更新
@@ -1144,7 +1156,8 @@ function renderW(){
   if(!items.length){g.innerHTML='<div class="empty-state"><div class="empty-icon">🥃</div><p>まだウイスキーが記録されていません</p></div>';return;}
   g.innerHTML=items.map(w=>`<div class="entry-card" onclick="showDet('whisky',${w.id})">
     ${(w.imgbbUrl||w.img)?`<div class="card-thumb"><img src="${w.imgbbUrl||w.img}" alt="${w.name}"></div>`:'<div class="card-thumb">🥃</div>'}
-    <div class="card-body"><div class="card-cat">${w.region||'産地不明'}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
+    <div class="card-body"><div class="card-cat">${w.region||'産地不明'}${w.scotland?' / '+w.scotland:''}${w.type?' · '+w.type:''}${w.age?' · '+w.age:''}${w.abv?' · '+w.abv:''}</div>
+    ${w.barrel?`<div class="card-sub" style="font-size:11px;color:var(--text-light)">🪵 ${w.barrel}</div>`:''}
     <div class="card-title">${w.name}</div>${w.distillery?`<div class="card-sub">${w.distillery}</div>`:''}
     <div class="stars">${starsHtml(w.rating)}</div>
     ${w.notes&&w.notes.length?`<div class="card-tags">${w.notes.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`:''}
@@ -1222,6 +1235,7 @@ function showDet(type,id){
       <div class="stars" style="margin-bottom:14px">${starsHtml(item.rating)}</div>
       <div class="det-meta">
         ${item.age?`<div class="det-mi"><div class="det-ml">熟成年数</div><div class="det-mv">${item.age}</div></div>`:''}
+        ${item.barrel?`<div class="det-mi"><div class="det-ml">樽の種類</div><div class="det-mv">${item.barrel}</div></div>`:''}
         ${item.abv?`<div class="det-mi"><div class="det-ml">度数</div><div class="det-mv">${item.abv}</div></div>`:''}
         ${item.cost?`<div class="det-mi"><div class="det-ml">仕入れ金額</div><div class="det-mv">¥${item.cost.toLocaleString()}${item.bottles&&item.bottles>1?' × '+item.bottles+'本 = ¥'+(item.cost*item.bottles).toLocaleString():''}</div></div>`:''}
         ${item.price?`<div class="det-mi"><div class="det-ml">販売価格(1shot)</div><div class="det-mv">¥${item.price.toLocaleString()}</div></div>`:''}
